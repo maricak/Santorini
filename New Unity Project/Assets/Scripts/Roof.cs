@@ -4,13 +4,14 @@ using UnityEngine;
 
 public class Roof : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+
+    private static readonly List<Roof> roofs = new List<Roof>();
+    internal static void GenerateRoof(int x, int y, Board board)
+    {
+        GameObject gameObject = Instantiate(board.roofPrefab) as GameObject;
+        gameObject.transform.SetParent(board.transform);
+        Roof roof = gameObject.GetComponent<Roof>();
+        roofs.Add(roof);
+        Util.MoveRoof(roof, x, y, (int)Tile.GetTile(x, y).Height);
+    }
 }
