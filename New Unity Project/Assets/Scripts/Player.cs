@@ -7,21 +7,24 @@ public enum PlayerType : int { PLAYER0 = 0, PLAYER1 };
 
 public class Player : MonoBehaviour
 {
-    /*public static GameObject[] playerPrefabs = new GameObject[2];
-    public  GameObject[] playerPrefabsTmp = new GameObject[2];
-    */
+    private static Player[,] players = new Player[2, 2];
     public static Player selectedPlayer;
-    public static Vector2 selectedPosition;
 
     public static PlayerType turn = PlayerType.PLAYER0;
 
     public PlayerType Type { get; set; }
 
-    public static void GeneratePlayer(PlayerType type, Vector3 mouseOver, Board board)
+    public Vector2 Position { get; set; }
+
+    public static Player GetPlayer(PlayerType type, int index)
+    {
+        return players[(int)type, index];
+    }
+    public static void GeneratePlayer(PlayerType type, Vector2 position, Board board, int index)
     {
         // position
-        int x = (int)mouseOver.x;
-        int y = (int)mouseOver.y;
+        int x = (int)position.x;
+        int y = (int)position.y;
 
         Tile tile = Tile.GetTile(x, y);
         // create object
@@ -29,21 +32,27 @@ public class Player : MonoBehaviour
         gameObject.transform.SetParent(board.transform);
         Player player = gameObject.GetComponent<Player>();
         player.Type = type;
-
+        players[(int)type, index] = player;
         tile.Player = player;
 
         // set position
         Util.MovePlayer(player, x, y, 0);
+        player.Position = position;
     }
 
     public static void ChangeTurn()
     {
         turn = 1 - turn;
+        Board.UpdateMessage("Turn: " + turn);
     }
 
     public static bool IsWinner()
     {
-        Tile tile = Tile.GetTile((int)selectedPosition.x, (int)selectedPosition.y);
+        if (!selectedPlayer)
+        {
+            return false;
+        }
+        Tile tile = Tile.GetTile((int)selectedPlayer.Position.x, (int)selectedPlayer.Position.y);
         if (tile.Height == Height.H3)
         {
             return true;

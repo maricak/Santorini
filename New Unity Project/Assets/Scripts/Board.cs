@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Collections;
+using UnityEngine.UI;
 
 public class Board : MonoBehaviour
 {
-    public static Board Instance { get; set; }
+    private static Board Instance { get; set; }
+    private Board() { }
     public static readonly int DIM = 5;
 
     public GameObject tilePrefab;
@@ -15,25 +17,29 @@ public class Board : MonoBehaviour
     public GameObject highlightPrefab;
     public GameObject roofPrefab;
 
+    public Canvas messageCanvas;
+
 
     // position of the mouse
-    private static Vector2 mouseOver;
-    private static bool gameOver;
-    private static PlayerType winner;
-
+    private Vector2 mouseOver;
+    private bool gameOver = false;
+    private PlayerType winner;
 
     private void Start()
     {
         Instance = this;
+        FileManager.Instance.CreateFile();        
         // initialize mouse position
-        Board.ResetMouseOver();
+        ResetMouseOver();
         // generate board tiles
-        Board.GenerateBoard();
+        GenerateBoard();
 
         // position builders for both players
-        Move.StartPositioningPlayers();
-    }
+        Move.Instance.StartPositioningPlayers();
 
+        UpdateMessage("Turn: " + Player.turn);
+
+    }
 
     private void Update()
     {
@@ -41,21 +47,27 @@ public class Board : MonoBehaviour
         UpdateMouseOver();
         if (Input.GetMouseButtonDown(0) && MouseInsideBoard() && !gameOver)
         {
-            if (Move.positioningInProgress)
+            if (Move.Instance.PositioningInProgress)
             {
-                Move.Position(Player.turn, mouseOver, Board.Instance);
+                Move.Instance.Position(Player.turn, mouseOver, Board.Instance);
             }
             else
             {
-                Move.MakeMove(Player.turn, mouseOver, Board.Instance);
+                Move.Instance.MakeMove(Player.turn, mouseOver, Board.Instance);
                 CheckGameOver();
             }
         }
     }
 
+    private void OnApplicationQuit()
+    {
+        FileManager.Instance.SaveFile();
+    }
+
+
     #region MouseOver
     // update the position of the mouse
-    private static void UpdateMouseOver()
+    private void UpdateMouseOver()
     {
         if (!Camera.main)
         {
@@ -68,7 +80,6 @@ public class Board : MonoBehaviour
             // calculate tile index
             var x = (hit.point.x / (Tile.DISTANCE + Tile.SIZE));
             var y = (hit.point.z / (Tile.DISTANCE + Tile.SIZE));
-            //Debug.Log("double x=" + x + "double y=" + y);
             if (x % 1 <= 0.9 && y % 1 <= 0.9)
             {
                 mouseOver.x = (int)x;
@@ -84,20 +95,20 @@ public class Board : MonoBehaviour
             ResetMouseOver();
         }
     }
-    private static void ResetMouseOver()
+    private void ResetMouseOver()
     {
         mouseOver.x = -1;
         mouseOver.y = -1;
     }
     // check if mouse position is inside the board
-    private static bool MouseInsideBoard()
+    private bool MouseInsideBoard()
     {
         return mouseOver.x >= 0 && mouseOver.x < DIM && mouseOver.y >= 0 && mouseOver.y < DIM;
     }
     #endregion
 
     #region GenerateBoard
-    private static void GenerateBoard()
+    private void GenerateBoard()
     {
         for (int x = 0; x < DIM; x++)
         {
@@ -112,19 +123,27 @@ public class Board : MonoBehaviour
 
     #region 
 
-    private static void CheckGameOver()
+    private void CheckGameOver()
     {
-        if (!Move.HasPossibleMoves(mouseOver))
+        if (!Move.Instance.HasPossibleMoves(Player.turn))
         {
             gameOver = true;
             winner = 1 - Player.turn;
-        } else if(Player.IsWinner())
+            UpdateMessage("Winner is " + winner + "!");
+        }
+        else if(Player.IsWinner())
         {
             gameOver = true;
             winner = Player.turn;
+            UpdateMessage("Winner is " + winner + "!");
         }
     }
 
     #endregion
+
+    public static void UpdateMessage(string message)
+    {
+        Instance.messageCanvas.GetComponentInChildren<Text>().text = message;
+    }
 
 }

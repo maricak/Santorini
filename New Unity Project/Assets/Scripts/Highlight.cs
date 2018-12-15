@@ -6,11 +6,7 @@ using UnityEngine;
 public class Highlight : MonoBehaviour {
 
     public static GameObject[,] highlights = new GameObject[Board.DIM, Board.DIM];
-
-   /* public static GameObject highlightPrefab;
-    public GameObject highlightPrefabTmp;
-    */
-    internal static void GenerateHighlight(int x, int y, Board board)
+    public static void GenerateHighlight(int x, int y, Board board)
     {
         GameObject highlight = Instantiate(board.highlightPrefab) as GameObject;
         highlight.transform.SetParent(board.transform);
@@ -19,12 +15,10 @@ public class Highlight : MonoBehaviour {
         highlight.SetActive(false);
     }
 
-    internal static void SetHighlight(bool[,] possibleMoves)
+    public static void SetHighlight(bool[,] possibleMoves)
     {
-
         for (int x = 0; x < Board.DIM; x++)
         {
-
             for (int y = 0; y < Board.DIM; y++)
             {
                 if (possibleMoves[x, y])
@@ -34,10 +28,9 @@ public class Highlight : MonoBehaviour {
                 }
             }
         }
-
     }
 
-    internal static void ResetHighlight(bool[,] possibleMoves)
+    public static void ResetHighlight(bool[,] possibleMoves)
     {
         for (int x = 0; x < Board.DIM; x++)
         {
@@ -50,5 +43,4 @@ public class Highlight : MonoBehaviour {
             }
         }
     }
-
 }

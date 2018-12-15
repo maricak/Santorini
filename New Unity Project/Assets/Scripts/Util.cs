@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class Util
 {
-
     public static void MoveTile(Tile tile, int x, int y, int height)
     {
         tile.transform.position =

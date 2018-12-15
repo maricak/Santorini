@@ -13,9 +13,7 @@ public class Tile : MonoBehaviour
     public static readonly float DISTANCE = SIZE / 10;
     public static readonly Vector3 OFFSET = new Vector3(SIZE / 2, 0, SIZE / 2);
 
-    public static Tile[,] tiles = new Tile[Board.DIM, Board.DIM];
-    //public static GameObject tilePrefab;
-    //public GameObject tilePrefabTmp;
+    private static Tile[,] tiles = new Tile[Board.DIM, Board.DIM];
 
     public static Tile GetTile(int x, int y)
     {

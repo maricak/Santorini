@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class Roof : MonoBehaviour {
 
-
     private static readonly List<Roof> roofs = new List<Roof>();
-    internal static void GenerateRoof(int x, int y, Board board)
+    public static void GenerateRoof(int x, int y, Board board)
     {
         GameObject gameObject = Instantiate(board.roofPrefab) as GameObject;
         gameObject.transform.SetParent(board.transform);
