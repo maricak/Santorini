@@ -1,9 +1,5 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Collections;
 using UnityEngine.UI;
 
 
@@ -11,16 +7,21 @@ namespace etf.santorini.km150096d
 {
     public class Board : MonoBehaviour
     {
+        #region Singleton
         private static Board Instance { get; set; }
         private Board() { }
+        #endregion
+
         public static readonly int DIM = 5;
 
         // game object prefabs
+        #region Prefabs
         public GameObject tilePrefab;
         public GameObject[] playerPrefabs = new GameObject[2];
         public GameObject blockPrefab;
         public GameObject highlightPrefab;
         public GameObject roofPrefab;
+        #endregion
 
         // message
         public Canvas messageCanvas;
@@ -33,8 +34,6 @@ namespace etf.santorini.km150096d
 
         private float deltaTime = 0.0f;
         public float threshold = 0.5f;
-
-
 
         private void Start()
         {
@@ -53,15 +52,16 @@ namespace etf.santorini.km150096d
             // TODO -> initialize player logic -- human, bot, level....
             Player.Init(Instance);
 
-            // start positioning builders
-            Player.PositioningInProgress = true;
-            Player.ReadFromFileInProgres = true;
+            // TODO samo ako je potrebno!!
+            Player.StartReadingFromFile(); 
 
             UpdateMessage("Turn: " + Player.turn);
         }
 
         private void Update()
         {
+            deltaTime += Time.deltaTime;
+
             // update mouse postion
             UpdateMouseOver();
 
@@ -71,33 +71,26 @@ namespace etf.santorini.km150096d
                 {
                     if (Input.GetMouseButtonDown(0) && MouseInsideBoard())
                     {
-                        Player.Move(mouseOver);
+                        Player.MakeMove(mouseOver);
                     }
                 }
-                else
+                else if (deltaTime > threshold) // read move from file or ai after treshold time
                 {
-                    // read move from file or ai
-                    deltaTime += Time.deltaTime;
-                    if (deltaTime > threshold)
+                    deltaTime = 0.0f;
+                    try
                     {
-                        deltaTime = 0.0f;
-                        try
-                        {
-                            if (Player.ReadFromFileInProgres)
-                                Player.Move(Vector2.zero);
-                        }
-                        catch (IOException)
-                        {
-                            UpdateMessage("Input file is corrupted!");
-                        }
+                        // position is not important                    
+                        Player.MakeMove(Vector2.zero);
+                    }
+                    catch (IOException)
+                    {
+                        UpdateMessage("Input file is corrupted!");
+                        Player.FinishReadingFromFile();
                     }
                 }
-                CheckGameOver();
+                CheckGameOver();               
             }
-
-            // TODO ako je kraj citanja fajla postaviti nove igrace, human , ai..
         }
-
         private void OnApplicationQuit()
         {
             FileManager.Instance.SaveFile();

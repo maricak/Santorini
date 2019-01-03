@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -80,7 +78,6 @@ namespace etf.santorini.km150096d
 
             return new Vector2(row, col);
         }
-
         #endregion
 
         #region output
@@ -94,13 +91,11 @@ namespace etf.santorini.km150096d
             output = new StreamWriter("game" + DateTime.Now.ToString("yyyy_dd_M_HH_mm_ss") + ".txt");
         }
 
-        public void WritePositions(PlayerType type)
+        public void WritePositions()
         {
-            Player player = Player.GetPlayer(type, 0);
-            WriteVector(player.Position);
+            WriteVector(Src);
             WriteChar(' ');
-            player = Player.GetPlayer(type, 1);
-            WriteVector(player.Position);
+            WriteVector(Dst);
             WriteChar('\n');
         }
 

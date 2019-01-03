@@ -6,67 +6,56 @@ using UnityEngine;
 
 namespace etf.santorini.km150096d.moves
 {
-
     public abstract class Move
     {
-        protected enum MoveState { POSITION_FIRST, POSITION_SECOND, FINISH_POSITIONING, SELECT, MOVE, BUILD, FINISH };
+        protected enum MoveState { POSITION_FIRST, POSITION_SECOND, SELECT, MOVE, BUILD };
 
-        protected readonly bool[,] possibleMoves = new bool[Board.DIM, Board.DIM];
+        protected bool[,] possibleMoves = new bool[Board.DIM, Board.DIM];
 
-        public PlayerType Type { get; set; }
-        public Board Board { get; set; }
+        public readonly PlayerType type;
+        public readonly Board board;
 
         protected MoveState moveState = MoveState.POSITION_FIRST;
 
+        public Move(PlayerType type, Board board)
+        {
+            this.type = type;
+            this.board = board;
+        }
+        internal void CopyMove(Move move)
+        {
+            moveState = move.moveState;
+            possibleMoves = move.possibleMoves;
+        }
 
-        // TODO ukloniti virtual gde moze
+        // TODO ukloniti virtual gde moze, internal, public, private, modifikatori???
         public abstract bool MouseInputNeeded();
-        public virtual void Position(Vector2 position)
-        {
-            if (PositioningIsPossible(position))
-            {
-                // generate player
-                if (moveState == MoveState.POSITION_FIRST)
-                {
-                    Player.GeneratePlayer(Type, position, Board, 0);
-                    moveState = MoveState.POSITION_SECOND;
-                }
-                else if (moveState == MoveState.POSITION_SECOND)
-                {
-                    Player.GeneratePlayer(Type, position, Board, 1);
-                    moveState = MoveState.FINISH_POSITIONING;
-                }
-
-                // check if player positionin is over
-                if (moveState == MoveState.FINISH_POSITIONING)
-                {
-                    FileManager.Instance.WritePositions(Type);
-                    moveState = MoveState.SELECT;
-                    // finish positioning 
-                    if (Type == PlayerType.PLAYER1)
-                    {
-                        //Player.FinishPositioningPlayers();
-                        Player.PositioningInProgress = false;
-                    }
-                    // change turn
-                    Player.ChangeTurn();
-                }
-            }
-        }
-        protected virtual bool PositioningIsPossible(Vector2 position)
-        {
-            Tile t = Tile.GetTile((int)position.x, (int)position.y);
-            // the tile is not occupied
-            if (!t.HasPlayer())
-            {
-                return true;
-            }
-            return false;
-        }
+        
+        #region Move
         public virtual void MakeMove(Vector2 position)
         {
             switch (moveState)
             {
+                case MoveState.POSITION_FIRST:
+                    if (PositioningIsPossible(position))
+                    {
+                        Player.GeneratePlayer(type, position, board, 0);
+                        FileManager.Instance.Src = position;
+                        moveState = MoveState.POSITION_SECOND;
+                    }
+                    break;
+                case MoveState.POSITION_SECOND:
+                    if (PositioningIsPossible(position))
+                    {
+                        Player.GeneratePlayer(type, position, board, 1);
+                        FileManager.Instance.Dst = position;
+
+                        // finish positioning
+                        FileManager.Instance.WritePositions();
+                        moveState = MoveState.SELECT;
+                        Player.ChangeTurn();
+                    }
+                    break;
                 case MoveState.SELECT:
                     if (SelectPlayer(position))
                     {
@@ -84,26 +73,25 @@ namespace etf.santorini.km150096d.moves
                 case MoveState.BUILD:
                     if (Build(position))
                     {
-                        moveState = MoveState.FINISH;
                         Highlight.ResetHighlight();
                         FileManager.Instance.Build = position;
+
+                        // finish moving and building
+                        FileManager.Instance.WriteMove();
+                        moveState = MoveState.SELECT;
+                        Player.ChangeTurn();
                     }
                     break;
                 default: break;
             }
-            if (moveState == MoveState.FINISH)
-            {
-                FileManager.Instance.WriteMove();
-                moveState = MoveState.SELECT;
-                Player.ChangeTurn();
-            }
+
         }
-        protected virtual bool SelectPlayer(Vector2 position)
+        protected bool SelectPlayer(Vector2 position)
         {
             int x = (int)position.x;
             int y = (int)position.y;
             Tile selectedTile = Tile.GetTile(x, y);
-            if (selectedTile.HasPlayer() && selectedTile.Player.Type == Type)
+            if (selectedTile.HasPlayer() && selectedTile.Player.Type == type)
             {
                 Player.selectedPlayer = selectedTile.Player;
 
@@ -115,7 +103,7 @@ namespace etf.santorini.km150096d.moves
             }
             return false;
         }
-        protected virtual bool MovePlayer(Vector2 dstPosition)
+        protected bool MovePlayer(Vector2 dstPosition)
         {
             int x = (int)dstPosition.x;
             int y = (int)dstPosition.y;
@@ -147,7 +135,7 @@ namespace etf.santorini.km150096d.moves
                 Highlight.SetHighlight(possibleMoves);
                 return true;
             }
-            else if (tileDst.HasPlayer() && tileDst.Player.Type == Type)
+            else if (tileDst.HasPlayer() && tileDst.Player.Type == type)
             {
                 // remove old highlight
                 Highlight.ResetHighlight();
@@ -168,7 +156,7 @@ namespace etf.santorini.km150096d.moves
                 return false;
             }
         }
-        protected virtual bool Build(Vector2 position)
+        protected bool Build(Vector2 position)
         {
             int x = (int)position.x;
             int y = (int)position.y;
@@ -181,31 +169,20 @@ namespace etf.santorini.km150096d.moves
                 tile.Height++;
                 if (tile.Height == Height.ROOF)
                 {
-                    Roof.GenerateRoof(x, y, Board);
+                    Roof.GenerateRoof(x, y, board);
                 }
                 else
                 {
-                    Block.GenerateBlock(x, y, Board);
+                    Block.GenerateBlock(x, y, board);
                 }
                 return true;
             }
             return false;
         }
-        public virtual bool HasPossibleMoves()
-        {
-            if (moveState == MoveState.SELECT)
-            {
-                // is there a builder that can be selected and than moved 
-                return CanMove();
-            }
-            else if (moveState == MoveState.BUILD)
-            {
-                // is there available tile to build on
-                return CanBuild();
-            }
-            return true;
-        }
-        protected virtual void CalculatePossibleMoves(Vector2 playerPosition)
+        #endregion
+
+        #region Calculations
+        protected void CalculatePossibleMoves(Vector2 playerPosition)
         {
             int x = (int)playerPosition.x;
             int y = (int)playerPosition.y;
@@ -239,7 +216,7 @@ namespace etf.santorini.km150096d.moves
                 }
             }
         }
-        protected virtual void CalculatePossibleBuilds(Vector2 playerPosition)
+        protected void CalculatePossibleBuilds(Vector2 playerPosition)
         {
             int x = (int)playerPosition.x;
             int y = (int)playerPosition.y;
@@ -265,11 +242,38 @@ namespace etf.santorini.km150096d.moves
                 }
             }
         }
-        protected virtual bool CanMove()
+        #endregion
+
+        #region HasMoves
+        protected bool PositioningIsPossible(Vector2 position)
+        {
+            Tile t = Tile.GetTile((int)position.x, (int)position.y);
+            // the tile is not occupied
+            if (!t.HasPlayer())
+            {
+                return true;
+            }
+            return false;
+        }
+        public bool HasPossibleMoves()
+        {
+            if (moveState == MoveState.SELECT)
+            {
+                // is there a builder that can be selected and than moved 
+                return CanMove();
+            }
+            else if (moveState == MoveState.BUILD)
+            {
+                // is there available tile to build on
+                return CanBuild();
+            }
+            return true;
+        }
+        protected bool CanMove()
         {
             for (int k = 0; k < 2; k++)
             {
-                Player player = Player.GetPlayer(Type, k);
+                Player player = Player.GetPlayer(type, k);
                 int x = (int)player.Position.x;
                 int y = (int)player.Position.y;
                 Tile playerTile = Tile.GetTile(x, y);
@@ -299,7 +303,7 @@ namespace etf.santorini.km150096d.moves
             }
             return false;
         }
-        protected virtual bool CanBuild()
+        protected bool CanBuild()
         {
             int x = (int)Player.selectedPlayer.Position.x;
             int y = (int)Player.selectedPlayer.Position.y;
@@ -320,6 +324,7 @@ namespace etf.santorini.km150096d.moves
                 }
             }
             return false;
-        }
+        } 
+        #endregion
     }
 }

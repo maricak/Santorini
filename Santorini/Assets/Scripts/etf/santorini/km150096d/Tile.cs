@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace etf.santorini.km150096d
 {
@@ -9,17 +6,21 @@ namespace etf.santorini.km150096d
 
     public class Tile : MonoBehaviour
     {
-
         public static readonly float SIZE = 1.0f;
         //    public static readonly float OFFSET = SIZE / 2;
         public static readonly float DISTANCE = SIZE / 10;
         public static readonly Vector3 OFFSET = new Vector3(SIZE / 2, 0, SIZE / 2);
 
-        private static Tile[,] tiles = new Tile[Board.DIM, Board.DIM];
+        private static readonly Tile[,] tiles = new Tile[Board.DIM, Board.DIM];
 
         public static Tile GetTile(int x, int y)
         {
             return tiles[x, y];
+        }
+
+        public static Tile[,] GetTiles()
+        {
+            return tiles;
         }
 
         public Height Height { get; set; }
@@ -34,7 +35,6 @@ namespace etf.santorini.km150096d
             Height = Height.H0;
             Player = null;
         }
-
         public static void GenerateTile(int x, int y, Board board)
         {
             GameObject gameObject = Instantiate(board.tilePrefab) as GameObject;

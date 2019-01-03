@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 using etf.santorini.km150096d.moves;
 
@@ -17,28 +14,47 @@ namespace etf.santorini.km150096d
         public static PlayerType turn = PlayerType.PLAYER0;
 
         // move strategies
-        public static Move[] moves = new Move[2];
+        private static Move[] moves;
+        private static readonly Move[] fileMoves = new Move[2];
+        private static readonly Move[] playerMoves = new Move[2];
 
-        public static bool PositioningInProgress { get; set; }
-        public static bool ReadFromFileInProgres { get; set; }
+        private static bool readigFromFileInProgres;
 
         public PlayerType Type { get; set; }
         public Vector2 Position { get; set; }
 
 
-    
-      
         // initialize players' logic ----> add later
         public static void Init(Board board)
         {
-            moves[0] = new FileMove();
-            moves[1] = new FileMove();
-            moves[0].Type = PlayerType.PLAYER0;
-            moves[1].Type = PlayerType.PLAYER1;
-            moves[0].Board = board;
-            moves[1].Board = board;
+            fileMoves[0] = new FileMove(PlayerType.PLAYER0, board);
+            fileMoves[1] = new FileMove(PlayerType.PLAYER1, board);
+            playerMoves[0] = new HumanMove(PlayerType.PLAYER0, board);
+            playerMoves[1] = new HumanMove(PlayerType.PLAYER1, board);
+
+            moves = fileMoves;
         }
 
+        #region ReadingFromFile
+        public static void StartReadingFromFile()
+        {
+            readigFromFileInProgres = true;
+            moves = fileMoves;
+        }
+        public static bool ReadingInProgress()
+        {
+            return readigFromFileInProgres;
+        }
+        public static void FinishReadingFromFile()
+        {
+            readigFromFileInProgres = false;
+            moves = playerMoves;
+            moves[0].CopyMove(fileMoves[0]);
+            moves[1].CopyMove(fileMoves[1]);
+        }
+        #endregion
+
+        #region Player
         public static void GeneratePlayer(PlayerType type, Vector2 position, Board board, int index)
         {
             // position
@@ -60,7 +76,14 @@ namespace etf.santorini.km150096d
             // set position
             Util.MovePlayer(player, x, y, 0);
         }
+        public static Player GetPlayer(PlayerType playerType, int index)
+        {
+            return players[(int)playerType, index];
+        }
+        #endregion
 
+
+        #region Game
         public static void ChangeTurn()
         {
             turn = 1 - turn;
@@ -79,33 +102,13 @@ namespace etf.santorini.km150096d
                 return true;
             }
             return false;
-        }
+        }  
+        #endregion
 
-        public static void Move(Vector2 position)
-        {
-            if (Player.PositioningInProgress)
-            {
-                Player.PositionPlayer(position);
-            }
-            else
-            {
-                Player.MakeMove(position);              
-            }
-        }
-
-        public static Player GetPlayer(PlayerType playerType, int index)
-        {
-            return players[(int)playerType, index];
-        }
-
+        #region Moves
         public static void MakeMove(Vector2 position)
         {
             moves[(int)turn].MakeMove(position);
-        }
-
-        public static void PositionPlayer(Vector2 position)
-        {
-            moves[(int)turn].Position(position);
         }
 
         public static bool HasPossibleMoves()
@@ -117,5 +120,6 @@ namespace etf.santorini.km150096d
         {
             return moves[(int)turn].MouseInputNeeded();
         }
+        #endregion
     }
 }
