@@ -16,10 +16,6 @@ public class Player : MonoBehaviour
 
     public Vector2 Position { get; set; }
 
-    public static Player GetPlayer(PlayerType type, int index)
-    {
-        return players[(int)type, index];
-    }
     public static void GeneratePlayer(PlayerType type, Vector2 position, Board board, int index)
     {
         // position
@@ -32,12 +28,12 @@ public class Player : MonoBehaviour
         gameObject.transform.SetParent(board.transform);
         Player player = gameObject.GetComponent<Player>();
         player.Type = type;
+        player.Position = position;
         players[(int)type, index] = player;
         tile.Player = player;
 
         // set position
         Util.MovePlayer(player, x, y, 0);
-        player.Position = position;
     }
 
     public static void ChangeTurn()
@@ -48,7 +44,7 @@ public class Player : MonoBehaviour
 
     public static bool IsWinner()
     {
-        if (!selectedPlayer)
+        if(selectedPlayer == null)
         {
             return false;
         }
@@ -58,5 +54,10 @@ public class Player : MonoBehaviour
             return true;
         }
         return false;
+    }
+
+    internal static Player GetPlayer(PlayerType playerType, int index)
+    {
+        return players[(int)playerType, index];
     }
 }

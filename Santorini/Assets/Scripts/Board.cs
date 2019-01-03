@@ -19,11 +19,11 @@ public class Board : MonoBehaviour
 
     public Canvas messageCanvas;
 
-
     // position of the mouse
     private Vector2 mouseOver;
     private bool gameOver = false;
     private PlayerType winner;
+
 
     private void Start()
     {
@@ -38,13 +38,13 @@ public class Board : MonoBehaviour
         Move.Instance.StartPositioningPlayers();
 
         UpdateMessage("Turn: " + Player.turn);
-
     }
 
     private void Update()
     {
         // update mouse postion
         UpdateMouseOver();
+        // if player whose turn is AI then generate mouseOver vector via some algorithm else get mouse Click
         if (Input.GetMouseButtonDown(0) && MouseInsideBoard() && !gameOver)
         {
             if (Move.Instance.PositioningInProgress)
