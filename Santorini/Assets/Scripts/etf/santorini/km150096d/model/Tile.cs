@@ -19,12 +19,11 @@ namespace etf.santorini.km150096d.model
         {
             return tiles[x, y];
         }
-
-        public static Tile[,] GetTiles()
+       public static Tile[,] GetTiles()
         {
             return tiles;
         }
-
+        //public static Tile[,] Tiles { get { return tiles; } }
         public Height Height { get; set; }
         public Player Player { get; set; }
         public bool HasPlayer()

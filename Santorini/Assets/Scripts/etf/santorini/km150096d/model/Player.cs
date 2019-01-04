@@ -11,10 +11,11 @@ namespace etf.santorini.km150096d.model
 
     public class Player : MonoBehaviour
     {
+        #region Class fileds
         private static readonly Player[,] players = new Player[2, 2];
         public static Player selectedPlayer;
 
-        public static PlayerID turn = PlayerID.PLAYER0;
+        public static PlayerID turnId = PlayerID.PLAYER0;
 
         // move strategies
         private static Move[] moves = playerMoves;
@@ -22,12 +23,15 @@ namespace etf.santorini.km150096d.model
         private static readonly Move[] playerMoves = new Move[2];
 
         private static bool readigFromFileInProgres;
+        #endregion
 
+        #region Object fileds
         public PlayerID Id { get; set; }
         public Vector2 Position { get; set; }
+        #endregion
 
-
-        // initialize players' logic ----> add later
+        #region Initialisation
+        // initialise players' logic ----> add later
         public static void Init(Board board, PlayerType type1, PlayerType type2, bool simulation, int maxDepth, bool fileLoaded)
         {
             fileMoves[0] = new FileMove(PlayerID.PLAYER0, board);
@@ -51,12 +55,13 @@ namespace etf.santorini.km150096d.model
                 case PlayerType.HUMAN:
                     return new HumanMove(id, board);
                 case PlayerType.EASY:
-                    return new AISimpleMove(id, board, maxDepth);
+                    return new AIEasyMove(id, board, maxDepth);
             }
             // TODO dodati!
 
             return new HumanMove(id, board);
         }
+        #endregion
 
         #region ReadingFromFile
         public static void StartReadingFromFile()
@@ -103,45 +108,53 @@ namespace etf.santorini.km150096d.model
         {
             return players[(int)playerId, index];
         }
+
+        public static Vector2[] GetPlayerPositions(PlayerID playerId)
+        {
+            Vector2[] positions = new Vector2[2];
+            positions[0] = GetPlayer(playerId, 0).Position;
+            positions[1] = GetPlayer(playerId, 1).Position;
+            return positions;
+        }
         #endregion
-
-
+        
         #region Game
         public static void ChangeTurn()
         {
-            turn = 1 - turn;
-            Board.UpdateMessage("Turn: " + turn);
+            turnId = 1 - turnId;
+            Board.UpdateMessage("Turn: " + turnId);
         }
 
-        public static bool IsWinner()
+        public static bool IsGameOver(ref PlayerID winnerId)
         {
-            if (selectedPlayer == null)
+            if(moves[(int)PlayerID.PLAYER0].IsWinner() || !moves[(int)PlayerID.PLAYER1].HasPossibleMoves())
             {
-                return false;
+                winnerId = PlayerID.PLAYER0;
+                return true;
             }
-            Tile tile = Tile.GetTile((int)selectedPlayer.Position.x, (int)selectedPlayer.Position.y);
-            if (tile.Height == Height.H3)
+            else if (moves[(int)PlayerID.PLAYER1].IsWinner() || !moves[(int)PlayerID.PLAYER0].HasPossibleMoves())
             {
+                winnerId = PlayerID.PLAYER1;
                 return true;
             }
             return false;
-        }
+        } 
         #endregion
 
         #region Moves
         public static void MakeMove(Vector2 position)
         {
-            moves[(int)turn].MakeMove(position);
+            moves[(int)turnId].MakeMove(position);
         }
 
         public static bool HasPossibleMoves()
         {
-            return moves[(int)turn].HasPossibleMoves();
+            return moves[(int)turnId].HasPossibleMoves();
         }
 
         public static bool MouseInputNeeded()
         {
-            return moves[(int)turn].MouseInputNeeded();
+            return moves[(int)turnId].MouseInputNeeded();
         }
         #endregion
     }

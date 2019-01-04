@@ -60,7 +60,7 @@ namespace etf.santorini.km150096d.model
               Menu.Instance.depth.value + 1,
               Menu.Instance.loadFromFile);
 
-            UpdateMessage("Turn: " + Player.turn);
+            UpdateMessage("Turn: " + Player.turnId);
         }
 
         private void Update()
@@ -115,8 +115,8 @@ namespace etf.santorini.km150096d.model
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 25.0f, LayerMask.GetMask("Board")))
             {
                 // calculate tile index
-                var x = (hit.point.x / (Tile.DISTANCE + Tile.SIZE));
-                var y = (hit.point.z / (Tile.DISTANCE + Tile.SIZE));
+                var x = hit.point.x / (Tile.DISTANCE + Tile.SIZE);
+                var y = hit.point.z / (Tile.DISTANCE + Tile.SIZE);
                 if (x % 1 <= 0.9 && y % 1 <= 0.9)
                 {
                     mouseOver.x = (int)x;
@@ -162,19 +162,11 @@ namespace etf.santorini.km150096d.model
         private void CheckGameOver()
         {
             // current player has no possible moves
-            if (!Player.HasPossibleMoves())
+            if(Player.IsGameOver(ref winner))
             {
                 gameOver = true;
-                winner = 1 - Player.turn;
                 UpdateMessage("Winner is " + winner + "!");
-            }
-            // or he is a winner
-            else if (Player.IsWinner())
-            {
-                gameOver = true;
-                winner = Player.turn;
-                UpdateMessage("Winner is " + winner + "!");
-            }
+            }           
         }
 
         public static void UpdateMessage(string message)
