@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+using etf.santorini.km150096d.utils;
+using etf.santorini.km150096d.model;
 
 namespace etf.santorini.km150096d.moves
 {
@@ -12,14 +12,14 @@ namespace etf.santorini.km150096d.moves
 
         protected bool[,] possibleMoves = new bool[Board.DIM, Board.DIM];
 
-        public readonly PlayerType type;
+        public readonly PlayerID id;
         public readonly Board board;
 
         protected MoveState moveState = MoveState.POSITION_FIRST;
 
-        public Move(PlayerType type, Board board)
+        public Move(PlayerID id, Board board)
         {
-            this.type = type;
+            this.id = id;
             this.board = board;
         }
         internal void CopyMove(Move move)
@@ -39,7 +39,7 @@ namespace etf.santorini.km150096d.moves
                 case MoveState.POSITION_FIRST:
                     if (PositioningIsPossible(position))
                     {
-                        Player.GeneratePlayer(type, position, board, 0);
+                        Player.GeneratePlayer(id, position, board, 0);
                         FileManager.Instance.Src = position;
                         moveState = MoveState.POSITION_SECOND;
                     }
@@ -47,7 +47,7 @@ namespace etf.santorini.km150096d.moves
                 case MoveState.POSITION_SECOND:
                     if (PositioningIsPossible(position))
                     {
-                        Player.GeneratePlayer(type, position, board, 1);
+                        Player.GeneratePlayer(id, position, board, 1);
                         FileManager.Instance.Dst = position;
 
                         // finish positioning
@@ -91,7 +91,7 @@ namespace etf.santorini.km150096d.moves
             int x = (int)position.x;
             int y = (int)position.y;
             Tile selectedTile = Tile.GetTile(x, y);
-            if (selectedTile.HasPlayer() && selectedTile.Player.Type == type)
+            if (selectedTile.HasPlayer() && selectedTile.Player.Id == id)
             {
                 Player.selectedPlayer = selectedTile.Player;
 
@@ -135,7 +135,7 @@ namespace etf.santorini.km150096d.moves
                 Highlight.SetHighlight(possibleMoves);
                 return true;
             }
-            else if (tileDst.HasPlayer() && tileDst.Player.Type == type)
+            else if (tileDst.HasPlayer() && tileDst.Player.Id == id)
             {
                 // remove old highlight
                 Highlight.ResetHighlight();
@@ -273,7 +273,7 @@ namespace etf.santorini.km150096d.moves
         {
             for (int k = 0; k < 2; k++)
             {
-                Player player = Player.GetPlayer(type, k);
+                Player player = Player.GetPlayer(id, k);
                 int x = (int)player.Position.x;
                 int y = (int)player.Position.y;
                 Tile playerTile = Tile.GetTile(x, y);

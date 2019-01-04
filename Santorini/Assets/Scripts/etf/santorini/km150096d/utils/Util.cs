@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace etf.santorini.km150096d
+using etf.santorini.km150096d.model;
+
+namespace etf.santorini.km150096d.utils
 {
     public class Util
     {

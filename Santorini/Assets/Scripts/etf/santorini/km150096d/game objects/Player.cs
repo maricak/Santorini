@@ -1,38 +1,61 @@
 ﻿using UnityEngine;
 
 using etf.santorini.km150096d.moves;
+using etf.santorini.km150096d.utils;
+using System;
 
-namespace etf.santorini.km150096d
+namespace etf.santorini.km150096d.model
 {
-    public enum PlayerType : int { PLAYER0 = 0, PLAYER1 };
+    public enum PlayerID : int { PLAYER0 = 0, PLAYER1 };
+    public enum PlayerType : int { HUMAN, EASY, MEDIUM, HARD };
 
     public class Player : MonoBehaviour
     {
         private static readonly Player[,] players = new Player[2, 2];
         public static Player selectedPlayer;
 
-        public static PlayerType turn = PlayerType.PLAYER0;
+        public static PlayerID turn = PlayerID.PLAYER0;
 
         // move strategies
-        private static Move[] moves;
+        private static Move[] moves = playerMoves;
         private static readonly Move[] fileMoves = new Move[2];
         private static readonly Move[] playerMoves = new Move[2];
 
         private static bool readigFromFileInProgres;
 
-        public PlayerType Type { get; set; }
+        public PlayerID Id { get; set; }
         public Vector2 Position { get; set; }
 
 
         // initialize players' logic ----> add later
-        public static void Init(Board board)
+        public static void Init(Board board, PlayerType type1, PlayerType type2, bool simulation, int maxDepth, bool fileLoaded)
         {
-            fileMoves[0] = new FileMove(PlayerType.PLAYER0, board);
-            fileMoves[1] = new FileMove(PlayerType.PLAYER1, board);
-            playerMoves[0] = new HumanMove(PlayerType.PLAYER0, board);
-            playerMoves[1] = new HumanMove(PlayerType.PLAYER1, board);
+            fileMoves[0] = new FileMove(PlayerID.PLAYER0, board);
+            fileMoves[1] = new FileMove(PlayerID.PLAYER1, board);
 
-            moves = fileMoves;
+            playerMoves[0] = CreateMove(type1, PlayerID.PLAYER0, board, maxDepth);
+            playerMoves[1] = CreateMove(type2, PlayerID.PLAYER1, board, maxDepth);
+
+            moves = playerMoves;
+
+            if(fileLoaded)
+            {
+                StartReadingFromFile();
+            }
+        }
+
+        private static Move CreateMove(PlayerType type1, PlayerID id, Board board, int maxDepth)
+        {
+            switch(type1)
+            {
+                case PlayerType.HUMAN:
+                    return new HumanMove(id, board);
+                case PlayerType.EASY:
+                    return new AISimpleMove(id, board, maxDepth);
+            }
+            // TODO dodati!
+
+            return new HumanMove(id, board);
         }
 
         #region ReadingFromFile
@@ -55,7 +78,7 @@ namespace etf.santorini.km150096d
         #endregion
 
         #region Player
-        public static void GeneratePlayer(PlayerType type, Vector2 position, Board board, int index)
+        public static void GeneratePlayer(PlayerID id, Vector2 position, Board board, int index)
         {
             // position
             int x = (int)position.x;
@@ -63,22 +86,22 @@ namespace etf.santorini.km150096d
 
             Tile tile = Tile.GetTile(x, y);
             // create object
-            GameObject gameObject = Instantiate(board.playerPrefabs[(int)type]) as GameObject;
+            GameObject gameObject = Instantiate(board.playerPrefabs[(int)id]) as GameObject;
             gameObject.transform.SetParent(board.transform);
             Player player = gameObject.GetComponent<Player>();
 
             // init object
-            player.Type = type;
+            player.Id = id;
             player.Position = position;
-            players[(int)type, index] = player;
+            players[(int)id, index] = player;
             tile.Player = player;
 
             // set position
             Util.MovePlayer(player, x, y, 0);
         }
-        public static Player GetPlayer(PlayerType playerType, int index)
+        public static Player GetPlayer(PlayerID playerId, int index)
         {
-            return players[(int)playerType, index];
+            return players[(int)playerId, index];
         }
         #endregion
 
@@ -102,7 +125,7 @@ namespace etf.santorini.km150096d
                 return true;
             }
             return false;
-        }  
+        }
         #endregion
 
         #region Moves

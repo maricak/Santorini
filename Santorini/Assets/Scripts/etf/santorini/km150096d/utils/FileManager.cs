@@ -1,9 +1,9 @@
-﻿using System;
+﻿
+using System;
 using System.IO;
-using UnityEditor;
 using UnityEngine;
 
-namespace etf.santorini.km150096d
+namespace etf.santorini.km150096d.utils
 {
     public class FileManager
     {
@@ -33,15 +33,22 @@ namespace etf.santorini.km150096d
 
 
         #region input
-        public bool SetInput()
+        public bool SetInput(string fileName)
         {
-            string fileName = EditorUtility.OpenFilePanel("Select game file", "", "txt");
-            if (String.IsNullOrEmpty(fileName) || !fileName.EndsWith("txt"))
+            if (string.IsNullOrEmpty(fileName) || !fileName.EndsWith("txt"))
             {
+                input = null;
                 return false;
             }
-            input = new StreamReader(fileName);
-
+            try
+            {
+                input = new StreamReader(fileName);
+            }
+            catch (Exception)
+            {
+                input = null;
+                return false;
+            }
             return true;
         }
 
@@ -125,3 +132,4 @@ namespace etf.santorini.km150096d
 
     }
 }
+

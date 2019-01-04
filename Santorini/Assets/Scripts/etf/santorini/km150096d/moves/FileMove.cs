@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
+
+using etf.santorini.km150096d.utils;
+using etf.santorini.km150096d.model;
 
 namespace etf.santorini.km150096d.moves
 {
     class FileMove : Move
     {
-        public FileMove(PlayerType type, Board board) : base(type, board) { }
+        public FileMove(PlayerID id, Board board) : base(id, board) { }
         public override bool MouseInputNeeded()
         {
             return false;

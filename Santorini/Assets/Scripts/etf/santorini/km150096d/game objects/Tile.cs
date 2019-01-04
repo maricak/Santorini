@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 
-namespace etf.santorini.km150096d
+using etf.santorini.km150096d.utils;
+
+namespace etf.santorini.km150096d.model
 {
     public enum Height { H0 = 1, H1, H2, H3, ROOF };
 

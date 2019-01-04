@@ -1,14 +1,16 @@
 ﻿using UnityEngine;
 
+using etf.santorini.km150096d.utils;
+using etf.santorini.km150096d.model;
 
 namespace etf.santorini.km150096d.moves
 {
     public class AISimpleMove : Move
     {
-        private readonly int maxDepth;
-        public AISimpleMove(PlayerType type, Board board, int maxDepth) : base(type, board)
+      //  private readonly int maxDepth;
+        public AISimpleMove(PlayerID id, Board board, int maxDepth) : base(id, board)
         {
-            this.maxDepth = maxDepth;
+          //  this.maxDepth = maxDepth;
         }
         public override bool MouseInputNeeded()
         {
@@ -27,8 +29,8 @@ namespace etf.santorini.km150096d.moves
                 // minimax                
                 MiniMax(
                     Tile.GetTiles(),
-                    type,
-                    new Vector2[2] { Player.GetPlayer(type, 0).Position, Player.GetPlayer(type, 1).Position },
+                    id,
+                    new Vector2[2] { Player.GetPlayer(id, 0).Position, Player.GetPlayer(id, 1).Position },
                     0,
                     ref position);
             }
@@ -40,7 +42,7 @@ namespace etf.santorini.km150096d.moves
             return new Vector2(Random.Range(0, 5), Random.Range(0, 5));
         }
         public float MiniMax(Tile[,] tiles,
-            PlayerType currentType, // his move in the minimax tree
+            PlayerID currentId, // his move in the minimax tree
             Vector2[] positions,
             int currentDepth,
             ref Vector2 bestMove)

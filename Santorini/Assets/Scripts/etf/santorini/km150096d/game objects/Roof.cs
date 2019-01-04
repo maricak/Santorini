@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace etf.santorini.km150096d
+using etf.santorini.km150096d.utils;
+
+namespace etf.santorini.km150096d.model
 {
     public class Roof : MonoBehaviour
     {

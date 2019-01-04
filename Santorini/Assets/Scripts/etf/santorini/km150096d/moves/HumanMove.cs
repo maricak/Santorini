@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using etf.santorini.km150096d.model;
 
 namespace etf.santorini.km150096d.moves
 {
     public class HumanMove : Move
     {
-        public HumanMove(PlayerType type, Board board) : base(type, board) { }
+        public HumanMove(PlayerID id, Board board) : base(id, board) { }
         
         public override bool MouseInputNeeded()
         {

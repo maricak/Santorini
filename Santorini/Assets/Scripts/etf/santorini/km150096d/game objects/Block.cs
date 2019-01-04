@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using etf.santorini.km150096d.utils;
 
-namespace etf.santorini.km150096d
+namespace etf.santorini.km150096d.model
 {
     public class Block : MonoBehaviour
     {

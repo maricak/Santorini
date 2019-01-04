@@ -2,13 +2,15 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
+using etf.santorini.km150096d.utils;
+using etf.santorini.km150096d.menu;
 
-namespace etf.santorini.km150096d
+namespace etf.santorini.km150096d.model
 {
     public class Board : MonoBehaviour
     {
         #region Singleton
-        private static Board Instance { get; set; }
+        public static Board Instance { get; set; }
         private Board() { }
         #endregion
 
@@ -30,10 +32,14 @@ namespace etf.santorini.km150096d
         private Vector2 mouseOver;
 
         private bool gameOver = false;
-        private PlayerType winner;
+        private PlayerID winner;
 
         private float deltaTime = 0.0f;
         public float threshold = 0.5f;
+
+        public bool Simulation { set; get; }
+        public bool[] computers = new bool[2];
+        public int MaxDepth { set; get; }
 
         private void Start()
         {
@@ -42,18 +48,17 @@ namespace etf.santorini.km150096d
             // initialize files
             FileManager.Instance.SetOutput();
 
-            // TODO if needed! ------------------>  change later
-            FileManager.Instance.SetInput();
             // initialize mouse position
             ResetMouseOver();
             // generate board tiles
             GenerateBoard();
 
-            // TODO -> initialize player logic -- human, bot, level....
-            Player.Init(Instance);
-
-            // TODO samo ako je potrebno!!
-            Player.StartReadingFromFile(); 
+            Player.Init(Instance,
+              (PlayerType)Menu.Instance.player1.value,
+              (PlayerType)Menu.Instance.player2.value,
+              Menu.Instance.simulation.isOn,
+              Menu.Instance.depth.value + 1,
+              Menu.Instance.loadFromFile);
 
             UpdateMessage("Turn: " + Player.turn);
         }
@@ -88,7 +93,7 @@ namespace etf.santorini.km150096d
                         Player.FinishReadingFromFile();
                     }
                 }
-                CheckGameOver();               
+                CheckGameOver();
             }
         }
         private void OnApplicationQuit()
