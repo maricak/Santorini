@@ -3,8 +3,6 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 using etf.santorini.km150096d.utils;
-using etf.santorini.km150096d.model;
-
 
 namespace etf.santorini.km150096d.menu
 {

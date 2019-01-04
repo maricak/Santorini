@@ -1,6 +1,6 @@
-﻿using UnityEngine;
-
-using etf.santorini.km150096d.model;
+﻿using etf.santorini.km150096d.model.gameobject;
+using etf.santorini.km150096d.model.interfaces;
+using UnityEngine;
 
 namespace etf.santorini.km150096d.moves
 {
@@ -18,7 +18,7 @@ namespace etf.santorini.km150096d.moves
         {
             return false;
         }
-        public override void MakeMove(Vector2 position)
+       /* public override void MakeMove(Vector2 position)
         {
             if (moveState == MoveState.POSITION_FIRST || moveState == MoveState.POSITION_SECOND)
             {
@@ -43,13 +43,13 @@ namespace etf.santorini.km150096d.moves
                 base.MakeMove(bestMove[1]); // move
                 base.MakeMove(bestMove[2]); // build
             }
-        }
+        }*/
         private Vector2 RandomPosition()
         {
             return new Vector2(Random.Range(0, 5), Random.Range(0, 5));
         }
 
-        public float Minimax(BoardState board, Vector2[] bestMove)
+     /*   public float Minimax(BoardState board, Vector2[] bestMove)
         {
             if (board.CurrentWins())
             {
@@ -138,5 +138,5 @@ namespace etf.santorini.km150096d.moves
             }
             return bestScore;
         }
-    }
+  */  }
 }

@@ -2,18 +2,17 @@
 
 using etf.santorini.km150096d.moves;
 using etf.santorini.km150096d.utils;
-using System;
+using etf.santorini.km150096d.model.interfaces;
 
-namespace etf.santorini.km150096d.model
+namespace etf.santorini.km150096d.model.gameobject
 {
-    public enum PlayerID : int { PLAYER0 = 0, PLAYER1 };
-    public enum PlayerType : int { HUMAN, EASY, MEDIUM, HARD };
 
-    public class Player : MonoBehaviour
+
+    public class Player : MonoBehaviour, IPlayer
     {
         #region Class fileds
-        private static readonly Player[,] players = new Player[2, 2];
-        public static Player selectedPlayer;
+        private static readonly IPlayer[,] players = new Player[2, 2];
+        public static IPlayer selectedPlayer;
 
         public static PlayerID turnId = PlayerID.PLAYER0;
 
@@ -104,7 +103,7 @@ namespace etf.santorini.km150096d.model
             // set position
             Util.MovePlayer(player, x, y, 0);
         }
-        public static Player GetPlayer(PlayerID playerId, int index)
+        public static IPlayer GetPlayer(PlayerID playerId, int index)
         {
             return players[(int)playerId, index];
         }

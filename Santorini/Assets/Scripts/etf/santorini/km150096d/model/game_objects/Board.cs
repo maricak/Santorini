@@ -4,8 +4,9 @@ using UnityEngine.UI;
 
 using etf.santorini.km150096d.utils;
 using etf.santorini.km150096d.menu;
+using etf.santorini.km150096d.model.interfaces;
 
-namespace etf.santorini.km150096d.model
+namespace etf.santorini.km150096d.model.gameobject
 {
     public class Board : MonoBehaviour
     {
@@ -17,20 +18,22 @@ namespace etf.santorini.km150096d.model
         public static readonly int DIM = 5;
 
         // game object prefabs
-        #region Prefabs
+        #region Unity objects
         public GameObject tilePrefab;
         public GameObject[] playerPrefabs = new GameObject[2];
         public GameObject blockPrefab;
         public GameObject highlightPrefab;
-        public GameObject roofPrefab;
-        #endregion
+        public GameObject roofPrefab;       
 
         // message
         public Canvas messageCanvas;
+        #endregion
+
 
         // position of the mouse
         private Vector2 mouseOver;
 
+        #region Game variables
         private bool gameOver = false;
         private PlayerID winner;
 
@@ -38,9 +41,10 @@ namespace etf.santorini.km150096d.model
         public float threshold = 0.5f;
 
         public bool Simulation { set; get; }
-        public bool[] computers = new bool[2];
         public int MaxDepth { set; get; }
+        #endregion
 
+        #region Unity methods
         private void Start()
         {
             Instance = this;
@@ -62,7 +66,6 @@ namespace etf.santorini.km150096d.model
 
             UpdateMessage("Turn: " + Player.turnId);
         }
-
         private void Update()
         {
             deltaTime += Time.deltaTime;
@@ -100,7 +103,7 @@ namespace etf.santorini.km150096d.model
         {
             FileManager.Instance.SaveFile();
         }
-
+        #endregion
 
         #region MouseOver
         // update the position of the mouse
@@ -158,6 +161,7 @@ namespace etf.santorini.km150096d.model
         }
         #endregion
 
+        #region Game methods
 
         private void CheckGameOver()
         {
@@ -168,10 +172,19 @@ namespace etf.santorini.km150096d.model
                 UpdateMessage("Winner is " + winner + "!");
             }           
         }
+        #endregion
 
+        #region Message
         public static void UpdateMessage(string message)
         {
             Instance.messageCanvas.GetComponentInChildren<Text>().text = message;
         }
+        #endregion
+
+        #region Player
+        #endregion
+
+        #region Tile
+        #endregion
     }
 }

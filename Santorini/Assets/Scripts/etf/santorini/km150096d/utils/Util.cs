@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
-
-using etf.santorini.km150096d.model;
+using etf.santorini.km150096d.model.gameobject;
 
 namespace etf.santorini.km150096d.utils
 {

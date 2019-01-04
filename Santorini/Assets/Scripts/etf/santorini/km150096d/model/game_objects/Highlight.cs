@@ -2,7 +2,7 @@
 
 using etf.santorini.km150096d.utils;
 
-namespace etf.santorini.km150096d.model
+namespace etf.santorini.km150096d.model.gameobject
 {
     public class Highlight : MonoBehaviour
     {

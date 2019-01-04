@@ -3,6 +3,8 @@ using UnityEngine;
 
 using etf.santorini.km150096d.utils;
 using etf.santorini.km150096d.model;
+using etf.santorini.km150096d.model.gameobject;
+using etf.santorini.km150096d.model.interfaces;
 
 namespace etf.santorini.km150096d.moves
 {
@@ -108,7 +110,7 @@ namespace etf.santorini.km150096d.moves
             int x = (int)dstPosition.x;
             int y = (int)dstPosition.y;
 
-            Player player = Player.selectedPlayer;
+            IPlayer player = Player.selectedPlayer;
             Tile tileSrc = Tile.GetTile((int)Player.selectedPlayer.Position.x, (int)Player.selectedPlayer.Position.y);
             Tile tileDst = Tile.GetTile(x, y);
 
@@ -123,7 +125,7 @@ namespace etf.santorini.km150096d.moves
                 // move player to new tile
                 tileDst.Player = player;
                 Player.selectedPlayer.Position = dstPosition;
-                Util.MovePlayer(player, x, y, (int)(tileDst.Height - 1));
+                Util.MovePlayer(player as Player, x, y, (int)(tileDst.Height - 1));
 
                 if (!CanBuild(Player.selectedPlayer.Position, Tile.GetTiles()))
                 {

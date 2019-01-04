@@ -1,4 +1,5 @@
-﻿using etf.santorini.km150096d.model;
+﻿using etf.santorini.km150096d.model.gameobject;
+using etf.santorini.km150096d.model.interfaces;
 
 namespace etf.santorini.km150096d.moves
 {

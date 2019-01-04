@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 
 using etf.santorini.km150096d.utils;
-using etf.santorini.km150096d.model;
+using etf.santorini.km150096d.model.interfaces;
+using etf.santorini.km150096d.model.gameobject;
 
 namespace etf.santorini.km150096d.moves
 {
