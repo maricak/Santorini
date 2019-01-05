@@ -44,6 +44,11 @@ namespace etf.santorini.km150096d.utils
                 - Vector3.down * height * 0.10f
                 + Vector3.down * 0.2f
                 + Vector3.forward * (y + y * Tile.DISTANCE) + Tile.OFFSET;
-        }       
+        }
+        
+        public static float Distance(Vector2 first, Vector2 second)
+        {
+            return Mathf.Abs(first.x - second.x) + Mathf.Abs(first.y - second.y);
+        }
     }
 }

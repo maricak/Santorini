@@ -7,18 +7,19 @@ using etf.santorini.km150096d.model.interfaces;
 
 namespace etf.santorini.km150096d.moves
 {
+    public enum MoveType : int { HUMAN, EASY, MEDIUM, HARD };
     public abstract class Move
     {
         protected enum MoveState { POSITION_FIRST, POSITION_SECOND, SELECT, MOVE, BUILD };
 
         protected bool[,] possibleMoves = new bool[Board.DIM, Board.DIM];
-
-        public readonly PlayerID id;
-        public readonly Board board;
+      
+        public PlayerID id;
+        public readonly IBoard board;
 
         protected MoveState moveState = MoveState.POSITION_FIRST;
 
-        public Move(PlayerID id, Board board)
+        public Move(PlayerID id, IBoard board)
         {
             this.id = id;
             this.board = board;
@@ -28,10 +29,20 @@ namespace etf.santorini.km150096d.moves
             moveState = move.moveState;
             possibleMoves = move.possibleMoves;
         }
+        internal void CopyPossibleMoves(Move move)
+        {
+            for(int i = 0; i < Board.DIM; i++)
+            {
+                for(int j = 0; j < Board.DIM; j++)
+                {
+                    possibleMoves[i, j] = move.possibleMoves[i, j];
+                }
+            }
+        }
 
         // TODO ukloniti virtual gde moze, internal, public, private, modifikatori???
         public abstract bool MouseInputNeeded();
-        
+
         #region Move
         public virtual void MakeMove(Vector2 position)
         {
@@ -40,28 +51,33 @@ namespace etf.santorini.km150096d.moves
                 case MoveState.POSITION_FIRST:
                     if (PositioningIsPossible(position))
                     {
-                        IPlayer player = Player.GeneratePlayer(id, position, board);
+                        IPlayer player = Player.GeneratePlayer(id, position, board as Board);
                         board[position].Player = player;
-                        board.players[(int)id, 0] = player;
+                        board[id, 0] = player;
 
-                        FileManager.Instance.Src = position;
 
+                        if (board is Board)
+                        {
+                            FileManager.Instance.Src = position;
+                        }
                         moveState = MoveState.POSITION_SECOND;
                     }
                     break;
                 case MoveState.POSITION_SECOND:
                     if (PositioningIsPossible(position))
                     {
-                        IPlayer player = Player.GeneratePlayer(id, position, board);
+                        IPlayer player = Player.GeneratePlayer(id, position, board as Board);
                         board[position].Player = player;
-                        board.players[(int)id, 1] = player;
+                        board[id, 1] = player;
 
-                        FileManager.Instance.Dst = position;
-
+                        if (board is Board)
+                        {
+                            FileManager.Instance.Dst = position;
+                            FileManager.Instance.WritePositions();
+                        }
+                        // finish positioning
                         moveState = MoveState.SELECT;
 
-                        // finish positioning
-                        FileManager.Instance.WritePositions();                        
                         board.ChangeTurn();
                     }
                     break;
@@ -69,24 +85,33 @@ namespace etf.santorini.km150096d.moves
                     if (SelectPlayer(position))
                     {
                         moveState = MoveState.MOVE;
-                        FileManager.Instance.Src = position;
+                        if (board is Board)
+                        {
+                            FileManager.Instance.Src = position;
+                        }
                     }
                     break;
                 case MoveState.MOVE:
                     if (MovePlayer(position)) // move selected
                     {
                         moveState = MoveState.BUILD;
-                        FileManager.Instance.Dst = position;
+                        if (board is Board)
+                        {
+                            FileManager.Instance.Dst = position;
+                        }
                     }
                     break;
                 case MoveState.BUILD:
                     if (Build(position))
                     {
-                        board.ResetHighlight();
-                        FileManager.Instance.Build = position;
+                        if (board is Board)
+                        {
+                            (board as Board).ResetHighlight();
+                            FileManager.Instance.Build = position;
 
+                            FileManager.Instance.WriteMove();
+                        }
                         // finish moving and building
-                        FileManager.Instance.WriteMove();
                         moveState = MoveState.SELECT;
                         board.ChangeTurn();
                     }
@@ -102,12 +127,14 @@ namespace etf.santorini.km150096d.moves
             ITile selectedTile = board[x, y];
             if (selectedTile.HasPlayer() && selectedTile.Player.Id == id)
             {
-                board.selectedPlayer = selectedTile.Player;
+                board.SelectedPlayer = selectedTile.Player;
 
                 // highlight
-                CalculatePossibleMoves(board.selectedPlayer.Position);
-                board.SetHighlight(possibleMoves);
-
+                CalculatePossibleMoves(board.SelectedPlayer.Position);
+                if (board is Board)
+                {
+                    (board as Board).SetHighlight(possibleMoves);
+                }
                 return true;
             }
             return false;
@@ -117,45 +144,56 @@ namespace etf.santorini.km150096d.moves
             int x = (int)dstPosition.x;
             int y = (int)dstPosition.y;
 
-            IPlayer player = board.selectedPlayer;
-            ITile tileSrc = board[board.selectedPlayer.Position];
+            IPlayer player = board.SelectedPlayer;
+            ITile tileSrc = board[board.SelectedPlayer.Position];
             ITile tileDst = board[x, y];
 
             if (possibleMoves[x, y])
             {
-                // remove highlight
-                board.ResetHighlight();
-
+                if (board is Board)
+                {
+                    // remove highlight
+                    (board as Board).ResetHighlight();
+                }
                 // remove player from old tile
                 tileSrc.Player = null;
 
                 // move player to new tile
                 tileDst.Player = player;
-                board.selectedPlayer.Position = dstPosition;
-                Util.MovePlayer(player as Player, x, y, (int)(tileDst.Height - 1));
-
-                if (!CanBuild(board.selectedPlayer.Position))
+                board.SelectedPlayer.Position = dstPosition;
+                if (board is Board)
                 {
-                    return false;
+                    Util.MovePlayer(player as Player, x, y, (int)(tileDst.Height - 1));
                 }
+                //if (!CanBuild(board.SelectedPlayer.Position))
+                //{
+                //    return false;
+                //}
 
                 // set new highlight
                 CalculatePossibleBuilds(dstPosition);
-                board.SetHighlight(possibleMoves);
+                if (board is Board)
+                {
+                    (board as Board).SetHighlight(possibleMoves);
+                }
                 return true;
             }
             else if (tileDst.HasPlayer() && tileDst.Player.Id == id)
             {
-                // remove old highlight
-                board.ResetHighlight();
-
+                if (board is Board)
+                {
+                    // remove old highlight
+                    (board as Board).ResetHighlight();
+                }
                 // player wants to select builder again
-                board.selectedPlayer = tileDst.Player;
+                board.SelectedPlayer = tileDst.Player;
 
                 // set new highlight
-                CalculatePossibleMoves(board.selectedPlayer.Position);
-                board.SetHighlight(possibleMoves);
-
+                CalculatePossibleMoves(board.SelectedPlayer.Position);
+                if (board is Board)
+                {
+                    (board as Board).SetHighlight(possibleMoves);
+                }
                 // move is not over
                 return false;
             }
@@ -176,13 +214,16 @@ namespace etf.santorini.km150096d.moves
             {
                 // generate block or roof
                 tile.Height++;
-                if (tile.Height == Height.ROOF)
+                if (board is Board)
                 {
-                    Roof.GenerateRoof(x, y, board, (int)tile.Height);
-                }
-                else
-                {
-                    Block.GenerateBlock(x, y, board, (int)tile.Height - 1);
+                    if (tile.Height == Height.ROOF)
+                    {
+                        Roof.GenerateRoof(x, y, board as Board, (int)tile.Height);
+                    }
+                    else
+                    {
+                        Block.GenerateBlock(x, y, board as Board, (int)tile.Height - 1);
+                    }
                 }
                 return true;
             }
@@ -258,13 +299,13 @@ namespace etf.santorini.km150096d.moves
 
         public bool IsWinner()
         {
-            if(moveState == MoveState.POSITION_FIRST || moveState == MoveState.POSITION_SECOND)
+            if (moveState == MoveState.POSITION_FIRST || moveState == MoveState.POSITION_SECOND)
             {
                 return false;
             }
-            Vector2[] positions = board.GetPlayerPositions(id);
+            Vector2[] positions = new Vector2[] { board[id, 0].Position, board[id, 1].Position};
             ITile tile = board[positions[0]];
-            if(tile.Height == Height.H3)
+            if (tile.Height == Height.H3)
             {
                 return true;
             }
@@ -293,12 +334,12 @@ namespace etf.santorini.km150096d.moves
             if (moveState == MoveState.SELECT)
             {
                 // is there a builder that can be selected and than moved 
-                return CanMove(board.GetPlayerPositions(id));
+                return CanMove(new Vector2[] { board[id, 0].Position, board[id, 1].Position });
             }
             else if (moveState == MoveState.BUILD)
             {
                 // is there available tile to build on
-                return CanBuild(board.selectedPlayer.Position);
+                return CanBuild(board.SelectedPlayer.Position);
             }
             return true;
         }
@@ -306,10 +347,8 @@ namespace etf.santorini.km150096d.moves
         {
             for (int k = 0; k < 2; k++)
             {
-               // Player player = Player.GetPlayer(id, k);
                 int x = (int)playerPositions[k].x;
                 int y = (int)playerPositions[k].y;
-                //Tile playerTile = Tile.GetTile(x, y);
                 ITile playerTile = board[x, y];
                 for (int i = 0; i < Board.DIM; i++)
                 {
@@ -321,7 +360,6 @@ namespace etf.santorini.km150096d.moves
                         }
                         else if (Math.Abs(x - i) <= 1 && Math.Abs(j - y) <= 1)
                         {
-                            // Tile tile = Tile.GetTile(i, j);
                             ITile tile = board[i, j];
                             if (tile.HasPlayer() || tile.Height == Height.ROOF || (playerTile.Height + 1).CompareTo(tile.Height) < 0)
                             {
@@ -359,7 +397,25 @@ namespace etf.santorini.km150096d.moves
                 }
             }
             return false;
-        } 
+        }
         #endregion
+
+        public static Move CreateMove(MoveType type, PlayerID id, IBoard board)
+        {
+            switch (type)
+            {
+                case MoveType.HUMAN:
+                    return new HumanMove(id, board);
+                case MoveType.EASY:
+                    return new EasyMove(id, board);
+                case MoveType.MEDIUM:
+                    return new MediumMove(id, board);
+                case MoveType.HARD:
+                    return new HardMove(id, board);
+            }
+            // TODO dodati!
+
+            return new HumanMove(id, board);
+        }
     }
 }

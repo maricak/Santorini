@@ -75,7 +75,7 @@ namespace etf.santorini.km150096d.utils
             input.Read();
 
             row -= 'A';
-            col -= '0';
+            col -= '1';
 
             // file is corrupted
             if (row < 0 || row >= 5 || col < 0 || col >= 5)

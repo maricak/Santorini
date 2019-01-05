@@ -5,8 +5,8 @@ namespace etf.santorini.km150096d.moves
 {
     public class HumanMove : Move
     {
-        public HumanMove(PlayerID id, Board board) : base(id, board) { }
-        
+        public HumanMove(PlayerID id, IBoard board) : base(id, board) { }
+
         public override bool MouseInputNeeded()
         {
             return true;

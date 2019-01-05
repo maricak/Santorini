@@ -8,7 +8,7 @@ namespace etf.santorini.km150096d.moves
 {
     class FileMove : Move
     {
-        public FileMove(PlayerID id, Board board) : base(id, board) { }
+        public FileMove(PlayerID id, IBoard board) : base(id,board) { }
         public override bool MouseInputNeeded()
         {
             return false;
@@ -22,7 +22,7 @@ namespace etf.santorini.km150096d.moves
             }
             else
             {
-                board.FinishReadingFromFile();
+                (board as Board).FinishReadingFromFile();
             }
         }
     }

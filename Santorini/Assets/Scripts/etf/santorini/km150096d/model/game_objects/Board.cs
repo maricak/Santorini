@@ -9,10 +9,10 @@ using etf.santorini.km150096d.moves;
 
 namespace etf.santorini.km150096d.model.gameobject
 {
-    public class Board : MonoBehaviour
+    public class Board : MonoBehaviour, IBoard
     {
         #region Singleton
-        public static Board Instance { get; set; }
+        public static IBoard Instance { get; set; }
         private Board() { }
         #endregion
 
@@ -31,9 +31,9 @@ namespace etf.santorini.km150096d.model.gameobject
 
         #region Tiles
         private readonly ITile[,] tiles = new Tile[DIM, DIM];
-        public ITile this[int i, int j]
+        public ITile this[int x, int y]
         {
-            get { return tiles[i, j]; }
+            get { return tiles[x, y]; }
         }
         public ITile this[Vector2 position]
         {
@@ -44,16 +44,21 @@ namespace etf.santorini.km150096d.model.gameobject
         #region Players
         // TODO modifikatori?
         public readonly IPlayer[,] players = new Player[2, 2];
-        public IPlayer selectedPlayer;
-        public PlayerID turnId = PlayerID.PLAYER0;
-
-        private readonly Move[] fileMoves = new Move[2];
-        private readonly Move[] playerMoves = new Move[2];
-        private Move[] moves;
+        public IPlayer this[PlayerID id, int num]
+        {
+            get { return players[(int)id, num]; }
+            set { players[(int)id, num] = value; }
+        }
+        public IPlayer SelectedPlayer { get; set; }
+        public PlayerID TurnId { get; set; }
 
         #endregion
 
-        private static bool readigFromFileInProgres;
+        #region Moves
+        private readonly Move[] fileMoves = new Move[2];
+        private readonly Move[] playerMoves = new Move[2];
+        private Move[] moves;
+        #endregion
 
         // position of the mouse
         private Vector2 mouseOver;
@@ -63,10 +68,14 @@ namespace etf.santorini.km150096d.model.gameobject
         private PlayerID winner;
 
         private float deltaTime = 0.0f;
-        public float threshold = 0.5f;
+        private float threshold = 0.0f;
 
         public bool Simulation { set; get; }
         public int MaxDepth { set; get; }
+
+        private MoveType moveType0;
+        private MoveType moveType1;
+        private bool loadFromFile;
         #endregion
 
         #region Unity runtime methods
@@ -74,6 +83,7 @@ namespace etf.santorini.km150096d.model.gameobject
         {
             Instance = this;
 
+            TurnId = PlayerID.PLAYER0;
             // initialize files
             FileManager.Instance.SetOutput();
 
@@ -82,14 +92,13 @@ namespace etf.santorini.km150096d.model.gameobject
             // generate board tiles
             GenerateBoard();
 
-            InitPlayers(Instance,
-              (PlayerType)Menu.Instance.player1.value,
-              (PlayerType)Menu.Instance.player2.value,
-              Menu.Instance.simulation.isOn,
-              Menu.Instance.depth.value + 1,
-              Menu.Instance.loadFromFile);
+            InitMenuInfo();
 
-            UpdateMessage("Turn: " + turnId);
+            InitPlayerMoves();
+
+            SelectedPlayer = players[0, 0];
+
+            UpdateMessage("Turn: " + TurnId);
         }
         private void Update()
         {
@@ -129,8 +138,6 @@ namespace etf.santorini.km150096d.model.gameobject
             FileManager.Instance.SaveFile();
         }
         #endregion
-
-
 
         #region MouseOver
         // update the position of the mouse
@@ -181,8 +188,8 @@ namespace etf.santorini.km150096d.model.gameobject
             {
                 for (int y = 0; y < DIM; y++)
                 {
-                    tiles[x, y] = Tile.GenerateTile(x, y, Board.Instance);
-                    Highlight.GenerateHighlight(x, y, Board.Instance);
+                    tiles[x, y] = Tile.GenerateTile(x, y, this);
+                    Highlight.GenerateHighlight(x, y, this);
                 }
             }
         }
@@ -215,87 +222,72 @@ namespace etf.santorini.km150096d.model.gameobject
         }
         public void ChangeTurn()
         {
-            turnId = 1 - turnId;
-            Board.UpdateMessage("Turn: " + turnId);
+            TurnId = 1 - TurnId;
+            UpdateMessage("Turn: " + TurnId);
         }
 
         public void MakeMove(Vector2 position)
         {
-            moves[(int)turnId].MakeMove(position);
+            moves[(int)TurnId].MakeMove(position);
         }
 
         public bool HasPossibleMoves()
         {
-            return moves[(int)turnId].HasPossibleMoves();
+            return moves[(int)TurnId].HasPossibleMoves();
         }
 
         public bool MouseInputNeeded()
         {
-            return moves[(int)turnId].MouseInputNeeded();
+            return moves[(int)TurnId].MouseInputNeeded();
         }
         #endregion
 
         #region Message
-        public static void UpdateMessage(string message)
+        public void UpdateMessage(string message)
         {
-            Instance.messageCanvas.GetComponentInChildren<Text>().text = message;
+            messageCanvas.GetComponentInChildren<Text>().text = message;
         }
         #endregion
 
         #region Game init
-        public void InitPlayers(Board board, PlayerType type1, PlayerType type2, bool simulation, int maxDepth, bool fileLoaded)
+        public void InitMenuInfo()
         {
-            fileMoves[0] = new FileMove(PlayerID.PLAYER0, board);
-            fileMoves[1] = new FileMove(PlayerID.PLAYER1, board);
+            moveType0 = (MoveType)Menu.Instance.player1.value;
+            moveType1 = (MoveType)Menu.Instance.player2.value;
+            Simulation = Menu.Instance.simulation.isOn;
+            MaxDepth = Menu.Instance.depth.value + 1;
+            loadFromFile = Menu.Instance.loadFromFile;
+        }
+        public void InitPlayerMoves()
+        {
+            if(Simulation)
+            {
+                threshold = 1f;
+            }
+            fileMoves[0] = new FileMove(PlayerID.PLAYER0, this);
+            fileMoves[1] = new FileMove(PlayerID.PLAYER1, this);
 
-            playerMoves[0] = CreateMove(type1, PlayerID.PLAYER0, board, maxDepth);
-            playerMoves[1] = CreateMove(type2, PlayerID.PLAYER1, board, maxDepth);
+            playerMoves[0] = Move.CreateMove(moveType0, PlayerID.PLAYER0, this);
+            playerMoves[1] = Move.CreateMove(moveType1, PlayerID.PLAYER1, this);
 
             moves = playerMoves;
 
-            if (fileLoaded)
+            if (loadFromFile)
             {
                 StartReadingFromFile();
             }
         }
-        private Move CreateMove(PlayerType type1, PlayerID id, Board board, int maxDepth)
-        {
-            switch (type1)
-            {
-                case PlayerType.HUMAN:
-                    return new HumanMove(id, board);
-                case PlayerType.EASY:
-                    return new AIEasyMove(id, board, maxDepth);
-            }
-            // TODO dodati!
 
-            return new HumanMove(id, board);
-        }
-        #endregion
-
-        #region Player 
-        public Vector2[] GetPlayerPositions(PlayerID playerId)
-        {
-            Vector2[] positions = new Vector2[2];
-            positions[0] = players[(int)playerId, 0].Position;
-            positions[1] = players[(int)playerId, 1].Position;
-            return positions;
-        }
         #endregion
 
         #region ReadingFromFile
         public void StartReadingFromFile()
         {
-            readigFromFileInProgres = true;
             moves = fileMoves;
         }
-        public bool ReadingInProgress()
-        {
-            return readigFromFileInProgres;
-        }
+
         public void FinishReadingFromFile()
         {
-            readigFromFileInProgres = false;
             moves = playerMoves;
             moves[0].CopyMove(fileMoves[0]);
             moves[1].CopyMove(fileMoves[1]);
@@ -305,13 +297,16 @@ namespace etf.santorini.km150096d.model.gameobject
         #region Highlight
         public void SetHighlight(bool[,] possibleMoves)
         {
-            for (int i = 0; i < DIM; i++)
+            if (moves[(int)TurnId] is HumanMove || (Simulation && !(moves[(int)TurnId] is FileMove)))
             {
-                for (int j = 0; j < DIM; j++)
+                for (int i = 0; i < DIM; i++)
                 {
-                    if (possibleMoves[i, j])
+                    for (int j = 0; j < DIM; j++)
                     {
-                        (tiles[i, j] as Tile).SetHighlight(i, j);
+                        if (possibleMoves[i, j])
+                        {
+                            (tiles[i, j] as Tile).SetHighlight(i, j);
+                        }
                     }
                 }
             }

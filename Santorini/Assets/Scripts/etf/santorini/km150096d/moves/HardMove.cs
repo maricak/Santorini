@@ -3,12 +3,9 @@ using etf.santorini.km150096d.model.interfaces;
 
 namespace etf.santorini.km150096d.moves
 {
-    public class AIMediumMove : Move
+    public class HardMove : Move
     {
-        public AIMediumMove(PlayerID id, Board board, int maxDepth) : base(id, board)
-        {
-            //  this.maxDepth = maxDepth;
-        }
+        public HardMove(PlayerID id, IBoard board) : base(id, board) { }
 
         public override bool MouseInputNeeded()
         {
