@@ -16,15 +16,7 @@ namespace etf.santorini.km150096d.model.gameobject
         #endregion
 
         #region Game objects
-        private static readonly Tile[,] tiles = new Tile[Board.DIM, Board.DIM];
-        public static Tile GetTile(int x, int y)
-        {
-            return tiles[x, y];
-        }
-        public static Tile[,] GetTiles()
-        {
-            return tiles;
-        }
+        private Highlight highlight;
         #endregion
 
         #region Object fileds
@@ -43,13 +35,29 @@ namespace etf.santorini.km150096d.model.gameobject
         }
 
         #region Generate
-        public static void GenerateTile(int x, int y, Board board)
+        public static Tile GenerateTile(int x, int y, Board board)
         {
             GameObject gameObject = Instantiate(board.tilePrefab) as GameObject;
             gameObject.transform.SetParent(board.transform);
             Tile tile = gameObject.GetComponent<Tile>();
-            tiles[x, y] = tile;
+            //tiles[x, y] = tile;
             Util.MoveTile(tile, x, y, 0);
+
+            tile.highlight = Highlight.GenerateHighlight(x, y, board);
+
+            return tile;
+        }
+        #endregion
+
+        #region Highlight
+        public void SetHighlight(int x, int y)
+        {
+            Util.MoveHighlight(highlight, x, y, (int)Height);
+            highlight.gameObject.SetActive(true);
+        }
+        public void ResetHighlght()
+        {
+            highlight.gameObject.SetActive(false);
         }
         #endregion
     }

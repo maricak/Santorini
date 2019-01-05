@@ -6,12 +6,12 @@ namespace etf.santorini.km150096d.model.gameobject
 {
     public class Block : MonoBehaviour
     {
-        internal static void GenerateBlock(int x, int y, Board board)
+        internal static void GenerateBlock(int x, int y, Board board, int height)
         {
             GameObject gameObject = Instantiate(board.blockPrefab) as GameObject;
             gameObject.transform.SetParent(board.transform);
             Block block = gameObject.GetComponent<Block>();
-            Util.MoveBlock(block, x, y, (int)Tile.GetTile(x, y).Height - 1);
+            Util.MoveBlock(block, x, y, /*(int)Tile.GetTile(x, y).Height - 1)*/ height);
         }
     }
 }

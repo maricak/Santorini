@@ -7,40 +7,17 @@ namespace etf.santorini.km150096d.model.gameobject
     public class Highlight : MonoBehaviour
     {
 
-        public static GameObject[,] highlights = new GameObject[Board.DIM, Board.DIM];
-        public static void GenerateHighlight(int x, int y, Board board)
+    //    public static Highlight[,] highlights = new Highlight[Board.DIM, Board.DIM];
+        public static Highlight GenerateHighlight(int x, int y, Board board)
         {
-            GameObject highlight = Instantiate(board.highlightPrefab) as GameObject;
-            highlight.transform.SetParent(board.transform);
-            highlights[x, y] = highlight;
-            Util.MoveHighlight(highlight, x, y, (int)Tile.GetTile(x, y).Height);
-            highlight.SetActive(false);
-        }
+            GameObject gameObject = Instantiate(board.highlightPrefab) as GameObject;
+            gameObject.transform.SetParent(board.transform);
+            Highlight highlight = gameObject.GetComponent<Highlight>();
+           // highlights[x, y] = highlight;
+            Util.MoveHighlight(highlight, x, y, height: 0); // na pocetnu je visina 0
+            highlight.gameObject.SetActive(false);
 
-        public static void SetHighlight(bool[,] possibleMoves)
-        {
-            for (int x = 0; x < Board.DIM; x++)
-            {
-                for (int y = 0; y < Board.DIM; y++)
-                {
-                    if (possibleMoves[x, y])
-                    {
-                        Util.MoveHighlight(highlights[x, y], x, y, (int)Tile.GetTile(x, y).Height);
-                        highlights[x, y].SetActive(true);
-                    }
-                }
-            }
-        }
-
-        public static void ResetHighlight()
-        {
-            for (int x = 0; x < Board.DIM; x++)
-            {
-                for (int y = 0; y < Board.DIM; y++)
-                {
-                    highlights[x, y].SetActive(false);
-                }
-            }
-        }
+            return highlight;
+        }       
     }
 }

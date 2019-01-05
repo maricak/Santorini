@@ -2,7 +2,6 @@
 using UnityEngine;
 
 using etf.santorini.km150096d.utils;
-using etf.santorini.km150096d.model;
 using etf.santorini.km150096d.model.gameobject;
 using etf.santorini.km150096d.model.interfaces;
 
@@ -39,23 +38,31 @@ namespace etf.santorini.km150096d.moves
             switch (moveState)
             {
                 case MoveState.POSITION_FIRST:
-                    if (PositioningIsPossible(position, Tile.GetTiles()))
+                    if (PositioningIsPossible(position))
                     {
-                        Player.GeneratePlayer(id, position, board, 0);
+                        IPlayer player = Player.GeneratePlayer(id, position, board);
+                        board[position].Player = player;
+                        board.players[(int)id, 0] = player;
+
                         FileManager.Instance.Src = position;
+
                         moveState = MoveState.POSITION_SECOND;
                     }
                     break;
                 case MoveState.POSITION_SECOND:
-                    if (PositioningIsPossible(position, Tile.GetTiles()))
+                    if (PositioningIsPossible(position))
                     {
-                        Player.GeneratePlayer(id, position, board, 1);
+                        IPlayer player = Player.GeneratePlayer(id, position, board);
+                        board[position].Player = player;
+                        board.players[(int)id, 1] = player;
+
                         FileManager.Instance.Dst = position;
 
-                        // finish positioning
-                        FileManager.Instance.WritePositions();
                         moveState = MoveState.SELECT;
-                        Player.ChangeTurn();
+
+                        // finish positioning
+                        FileManager.Instance.WritePositions();                        
+                        board.ChangeTurn();
                     }
                     break;
                 case MoveState.SELECT:
@@ -75,13 +82,13 @@ namespace etf.santorini.km150096d.moves
                 case MoveState.BUILD:
                     if (Build(position))
                     {
-                        Highlight.ResetHighlight();
+                        board.ResetHighlight();
                         FileManager.Instance.Build = position;
 
                         // finish moving and building
                         FileManager.Instance.WriteMove();
                         moveState = MoveState.SELECT;
-                        Player.ChangeTurn();
+                        board.ChangeTurn();
                     }
                     break;
                 default: break;
@@ -92,14 +99,14 @@ namespace etf.santorini.km150096d.moves
         {
             int x = (int)position.x;
             int y = (int)position.y;
-            Tile selectedTile = Tile.GetTile(x, y);
+            ITile selectedTile = board[x, y];
             if (selectedTile.HasPlayer() && selectedTile.Player.Id == id)
             {
-                Player.selectedPlayer = selectedTile.Player;
+                board.selectedPlayer = selectedTile.Player;
 
                 // highlight
-                CalculatePossibleMoves(Player.selectedPlayer.Position, ref possibleMoves, Tile.GetTiles());
-                Highlight.SetHighlight(possibleMoves);
+                CalculatePossibleMoves(board.selectedPlayer.Position);
+                board.SetHighlight(possibleMoves);
 
                 return true;
             }
@@ -110,44 +117,44 @@ namespace etf.santorini.km150096d.moves
             int x = (int)dstPosition.x;
             int y = (int)dstPosition.y;
 
-            IPlayer player = Player.selectedPlayer;
-            Tile tileSrc = Tile.GetTile((int)Player.selectedPlayer.Position.x, (int)Player.selectedPlayer.Position.y);
-            Tile tileDst = Tile.GetTile(x, y);
+            IPlayer player = board.selectedPlayer;
+            ITile tileSrc = board[board.selectedPlayer.Position];
+            ITile tileDst = board[x, y];
 
             if (possibleMoves[x, y])
             {
                 // remove highlight
-                Highlight.ResetHighlight();
+                board.ResetHighlight();
 
                 // remove player from old tile
                 tileSrc.Player = null;
 
                 // move player to new tile
                 tileDst.Player = player;
-                Player.selectedPlayer.Position = dstPosition;
+                board.selectedPlayer.Position = dstPosition;
                 Util.MovePlayer(player as Player, x, y, (int)(tileDst.Height - 1));
 
-                if (!CanBuild(Player.selectedPlayer.Position, Tile.GetTiles()))
+                if (!CanBuild(board.selectedPlayer.Position))
                 {
                     return false;
                 }
 
                 // set new highlight
-                CalculatePossibleBuilds(dstPosition, ref possibleMoves, Tile.GetTiles());
-                Highlight.SetHighlight(possibleMoves);
+                CalculatePossibleBuilds(dstPosition);
+                board.SetHighlight(possibleMoves);
                 return true;
             }
             else if (tileDst.HasPlayer() && tileDst.Player.Id == id)
             {
                 // remove old highlight
-                Highlight.ResetHighlight();
+                board.ResetHighlight();
 
                 // player wants to select builder again
-                Player.selectedPlayer = tileDst.Player;
+                board.selectedPlayer = tileDst.Player;
 
                 // set new highlight
-                CalculatePossibleMoves(Player.selectedPlayer.Position, ref possibleMoves, Tile.GetTiles());
-                Highlight.SetHighlight(possibleMoves);
+                CalculatePossibleMoves(board.selectedPlayer.Position);
+                board.SetHighlight(possibleMoves);
 
                 // move is not over
                 return false;
@@ -163,7 +170,7 @@ namespace etf.santorini.km150096d.moves
             int x = (int)position.x;
             int y = (int)position.y;
 
-            Tile tile = Tile.GetTile(x, y);
+            ITile tile = board[x, y];
 
             if (possibleMoves[x, y])
             {
@@ -171,11 +178,11 @@ namespace etf.santorini.km150096d.moves
                 tile.Height++;
                 if (tile.Height == Height.ROOF)
                 {
-                    Roof.GenerateRoof(x, y, board);
+                    Roof.GenerateRoof(x, y, board, (int)tile.Height);
                 }
                 else
                 {
-                    Block.GenerateBlock(x, y, board);
+                    Block.GenerateBlock(x, y, board, (int)tile.Height - 1);
                 }
                 return true;
             }
@@ -184,13 +191,13 @@ namespace etf.santorini.km150096d.moves
         #endregion
 
         #region Calculations
-        protected static void CalculatePossibleMoves(Vector2 playerPosition, ref bool[,] possibleMoves, Tile[,] tiles)
+        protected void CalculatePossibleMoves(Vector2 playerPosition)
         {
             int x = (int)playerPosition.x;
             int y = (int)playerPosition.y;
 
             //Tile playerTile = Tile.GetTile(x, y);
-            Tile playerTile = tiles[x, y];
+            ITile playerTile = board[x, y];
 
             for (int i = 0; i < Board.DIM; i++)
             {
@@ -203,7 +210,7 @@ namespace etf.santorini.km150096d.moves
                     else if (Math.Abs(x - i) <= 1 && Math.Abs(j - y) <= 1)
                     {
                         //Tile tile = Tile.GetTile(i, j);
-                        Tile tile = tiles[i, j];
+                        ITile tile = board[i, j];
                         if (tile.HasPlayer() || tile.Height == Height.ROOF || (playerTile.Height + 1).CompareTo(tile.Height) < 0)
                         {
                             possibleMoves[i, j] = false;
@@ -220,7 +227,7 @@ namespace etf.santorini.km150096d.moves
                 }
             }
         }
-        protected static void CalculatePossibleBuilds(Vector2 playerPosition, ref bool[,] possibleMoves, Tile[,] tiles)
+        protected void CalculatePossibleBuilds(Vector2 playerPosition)
         {
             int x = (int)playerPosition.x;
             int y = (int)playerPosition.y;
@@ -236,7 +243,7 @@ namespace etf.santorini.km150096d.moves
                     else if (Math.Abs(x - i) <= 1 && Math.Abs(j - y) <= 1)
                     {
                         // Tile tile = Tile.GetTile(i, j);
-                        Tile tile = tiles[i, j];
+                        ITile tile = board[i, j];
                         if (!tile.HasPlayer() && (tile.Height != Height.ROOF))
                             possibleMoves[i, j] = true;
                     }
@@ -255,13 +262,13 @@ namespace etf.santorini.km150096d.moves
             {
                 return false;
             }
-            Vector2[] positions = Player.GetPlayerPositions(id);
-            Tile tile = Tile.GetTile((int)positions[0].x, (int)positions[0].y);
+            Vector2[] positions = board.GetPlayerPositions(id);
+            ITile tile = board[positions[0]];
             if(tile.Height == Height.H3)
             {
                 return true;
             }
-            tile = Tile.GetTile((int)positions[1].x, (int)positions[1].y);
+            tile = board[positions[1]];
             if (tile.Height == Height.H3)
             {
                 return true;
@@ -270,10 +277,10 @@ namespace etf.santorini.km150096d.moves
         }
 
         #region HasMoves
-        protected static bool PositioningIsPossible(Vector2 position, Tile[,] tiles)
+        protected bool PositioningIsPossible(Vector2 position)
         {
-            //Tile tile = Tile.GetTile((int)position.x, (int)position.y);
-            Tile tile = tiles[(int)position.x, (int)position.y];
+            ITile tile = board[position];
+
             // the tile is not occupied
             if (!tile.HasPlayer())
             {
@@ -286,16 +293,16 @@ namespace etf.santorini.km150096d.moves
             if (moveState == MoveState.SELECT)
             {
                 // is there a builder that can be selected and than moved 
-                return CanMove(Player.GetPlayerPositions(id), Tile.GetTiles());
+                return CanMove(board.GetPlayerPositions(id));
             }
             else if (moveState == MoveState.BUILD)
             {
                 // is there available tile to build on
-                return CanBuild(Player.selectedPlayer.Position, Tile.GetTiles());
+                return CanBuild(board.selectedPlayer.Position);
             }
             return true;
         }
-        public static bool CanMove(/*PlayerID id, */Vector2[] playerPositions, Tile[,] tiles)
+        public bool CanMove(Vector2[] playerPositions)
         {
             for (int k = 0; k < 2; k++)
             {
@@ -303,7 +310,7 @@ namespace etf.santorini.km150096d.moves
                 int x = (int)playerPositions[k].x;
                 int y = (int)playerPositions[k].y;
                 //Tile playerTile = Tile.GetTile(x, y);
-                Tile playerTile = tiles[x, y];
+                ITile playerTile = board[x, y];
                 for (int i = 0; i < Board.DIM; i++)
                 {
                     for (int j = 0; j < Board.DIM; j++)
@@ -315,7 +322,7 @@ namespace etf.santorini.km150096d.moves
                         else if (Math.Abs(x - i) <= 1 && Math.Abs(j - y) <= 1)
                         {
                             // Tile tile = Tile.GetTile(i, j);
-                            Tile tile = tiles[i, j];
+                            ITile tile = board[i, j];
                             if (tile.HasPlayer() || tile.Height == Height.ROOF || (playerTile.Height + 1).CompareTo(tile.Height) < 0)
                             {
                                 continue;
@@ -330,10 +337,8 @@ namespace etf.santorini.km150096d.moves
             }
             return false;
         }
-        public static bool CanBuild(Vector2 builderPosition, Tile[,] tiles)
+        public bool CanBuild(Vector2 builderPosition)
         {
-            //int x = (int)Player.selectedPlayer.Position.x;
-            //int y = (int)Player.selectedPlayer.Position.y;
             int x = (int)builderPosition.x;
             int y = (int)builderPosition.y;
 
@@ -347,8 +352,7 @@ namespace etf.santorini.km150096d.moves
                     }
                     else if (Math.Abs(x - i) <= 1 && Math.Abs(j - y) <= 1)
                     {
-                        //Tile tile = Tile.GetTile(i, j);
-                        Tile tile = tiles[i, j];
+                        ITile tile = board[i, j];
                         if (!tile.HasPlayer() && (tile.Height != Height.ROOF))
                             return true;
                     }

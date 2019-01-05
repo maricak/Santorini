@@ -1,10 +1,11 @@
-using System.IO;
+﻿using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
 using etf.santorini.km150096d.utils;
 using etf.santorini.km150096d.menu;
 using etf.santorini.km150096d.model.interfaces;
+using etf.santorini.km150096d.moves;
 
 namespace etf.santorini.km150096d.model.gameobject
 {
@@ -17,18 +18,42 @@ namespace etf.santorini.km150096d.model.gameobject
 
         public static readonly int DIM = 5;
 
-        // game object prefabs
-        #region Unity objects
+        #region Prefabs and canvas
         public GameObject tilePrefab;
         public GameObject[] playerPrefabs = new GameObject[2];
         public GameObject blockPrefab;
         public GameObject highlightPrefab;
-        public GameObject roofPrefab;       
+        public GameObject roofPrefab;
 
         // message
         public Canvas messageCanvas;
         #endregion
 
+        #region Tiles
+        private readonly ITile[,] tiles = new Tile[DIM, DIM];
+        public ITile this[int i, int j]
+        {
+            get { return tiles[i, j]; }
+        }
+        public ITile this[Vector2 position]
+        {
+            get { return tiles[(int)position.x, (int)position.y]; }
+        }
+        #endregion
+
+        #region Players
+        // TODO modifikatori?
+        public readonly IPlayer[,] players = new Player[2, 2];
+        public IPlayer selectedPlayer;
+        public PlayerID turnId = PlayerID.PLAYER0;
+
+        private readonly Move[] fileMoves = new Move[2];
+        private readonly Move[] playerMoves = new Move[2];
+        private Move[] moves;
+
+        #endregion
+
+        private static bool readigFromFileInProgres;
 
         // position of the mouse
         private Vector2 mouseOver;
@@ -44,7 +69,7 @@ namespace etf.santorini.km150096d.model.gameobject
         public int MaxDepth { set; get; }
         #endregion
 
-        #region Unity methods
+        #region Unity runtime methods
         private void Start()
         {
             Instance = this;
@@ -57,14 +82,14 @@ namespace etf.santorini.km150096d.model.gameobject
             // generate board tiles
             GenerateBoard();
 
-            Player.Init(Instance,
+            InitPlayers(Instance,
               (PlayerType)Menu.Instance.player1.value,
               (PlayerType)Menu.Instance.player2.value,
               Menu.Instance.simulation.isOn,
               Menu.Instance.depth.value + 1,
               Menu.Instance.loadFromFile);
 
-            UpdateMessage("Turn: " + Player.turnId);
+            UpdateMessage("Turn: " + turnId);
         }
         private void Update()
         {
@@ -75,11 +100,11 @@ namespace etf.santorini.km150096d.model.gameobject
 
             if (!gameOver)
             {
-                if (Player.MouseInputNeeded()) // wait for mouse click
+                if (MouseInputNeeded()) // wait for mouse click
                 {
                     if (Input.GetMouseButtonDown(0) && MouseInsideBoard())
                     {
-                        Player.MakeMove(mouseOver);
+                        MakeMove(mouseOver);
                     }
                 }
                 else if (deltaTime > threshold) // read move from file or ai after treshold time
@@ -88,12 +113,12 @@ namespace etf.santorini.km150096d.model.gameobject
                     try
                     {
                         // position is not important                    
-                        Player.MakeMove(Vector2.zero);
+                        MakeMove(Vector2.zero);
                     }
                     catch (IOException)
                     {
                         UpdateMessage("Input file is corrupted!");
-                        Player.FinishReadingFromFile();
+                        FinishReadingFromFile();
                     }
                 }
                 CheckGameOver();
@@ -104,6 +129,8 @@ namespace etf.santorini.km150096d.model.gameobject
             FileManager.Instance.SaveFile();
         }
         #endregion
+
+
 
         #region MouseOver
         // update the position of the mouse
@@ -154,7 +181,7 @@ namespace etf.santorini.km150096d.model.gameobject
             {
                 for (int y = 0; y < DIM; y++)
                 {
-                    Tile.GenerateTile(x, y, Board.Instance);
+                    tiles[x, y] = Tile.GenerateTile(x, y, Board.Instance);
                     Highlight.GenerateHighlight(x, y, Board.Instance);
                 }
             }
@@ -166,11 +193,45 @@ namespace etf.santorini.km150096d.model.gameobject
         private void CheckGameOver()
         {
             // current player has no possible moves
-            if(Player.IsGameOver(ref winner))
+            if (IsGameOver(ref winner))
             {
                 gameOver = true;
                 UpdateMessage("Winner is " + winner + "!");
-            }           
+            }
+        }
+        public bool IsGameOver(ref PlayerID winnerId)
+        {
+            if (moves[(int)PlayerID.PLAYER0].IsWinner() || !moves[(int)PlayerID.PLAYER1].HasPossibleMoves())
+            {
+                winnerId = PlayerID.PLAYER0;
+                return true;
+            }
+            else if (moves[(int)PlayerID.PLAYER1].IsWinner() || !moves[(int)PlayerID.PLAYER0].HasPossibleMoves())
+            {
+                winnerId = PlayerID.PLAYER1;
+                return true;
+            }
+            return false;
+        }
+        public void ChangeTurn()
+        {
+            turnId = 1 - turnId;
+            Board.UpdateMessage("Turn: " + turnId);
+        }
+
+        public void MakeMove(Vector2 position)
+        {
+            moves[(int)turnId].MakeMove(position);
+        }
+
+        public bool HasPossibleMoves()
+        {
+            return moves[(int)turnId].HasPossibleMoves();
+        }
+
+        public bool MouseInputNeeded()
+        {
+            return moves[(int)turnId].MouseInputNeeded();
         }
         #endregion
 
@@ -181,10 +242,90 @@ namespace etf.santorini.km150096d.model.gameobject
         }
         #endregion
 
-        #region Player
+        #region Game init
+        public void InitPlayers(Board board, PlayerType type1, PlayerType type2, bool simulation, int maxDepth, bool fileLoaded)
+        {
+            fileMoves[0] = new FileMove(PlayerID.PLAYER0, board);
+            fileMoves[1] = new FileMove(PlayerID.PLAYER1, board);
+
+            playerMoves[0] = CreateMove(type1, PlayerID.PLAYER0, board, maxDepth);
+            playerMoves[1] = CreateMove(type2, PlayerID.PLAYER1, board, maxDepth);
+
+            moves = playerMoves;
+
+            if (fileLoaded)
+            {
+                StartReadingFromFile();
+            }
+        }
+        private Move CreateMove(PlayerType type1, PlayerID id, Board board, int maxDepth)
+        {
+            switch (type1)
+            {
+                case PlayerType.HUMAN:
+                    return new HumanMove(id, board);
+                case PlayerType.EASY:
+                    return new AIEasyMove(id, board, maxDepth);
+            }
+            // TODO dodati!
+
+            return new HumanMove(id, board);
+        }
         #endregion
 
-        #region Tile
+        #region Player 
+        public Vector2[] GetPlayerPositions(PlayerID playerId)
+        {
+            Vector2[] positions = new Vector2[2];
+            positions[0] = players[(int)playerId, 0].Position;
+            positions[1] = players[(int)playerId, 1].Position;
+            return positions;
+        }
+        #endregion
+
+        #region ReadingFromFile
+        public void StartReadingFromFile()
+        {
+            readigFromFileInProgres = true;
+            moves = fileMoves;
+        }
+        public bool ReadingInProgress()
+        {
+            return readigFromFileInProgres;
+        }
+        public void FinishReadingFromFile()
+        {
+            readigFromFileInProgres = false;
+            moves = playerMoves;
+            moves[0].CopyMove(fileMoves[0]);
+            moves[1].CopyMove(fileMoves[1]);
+        }
+        #endregion
+
+        #region Highlight
+        public void SetHighlight(bool[,] possibleMoves)
+        {
+            for (int i = 0; i < DIM; i++)
+            {
+                for (int j = 0; j < DIM; j++)
+                {
+                    if (possibleMoves[i, j])
+                    {
+                        (tiles[i, j] as Tile).SetHighlight(i, j);
+                    }
+                }
+            }
+        }
+        public void ResetHighlight()
+        {
+            for (int i = 0; i < DIM; i++)
+            {
+                for (int j = 0; j < DIM; j++)
+                {
+                    (tiles[i, j] as Tile).ResetHighlght();
+                }
+            }
+        }
         #endregion
     }
 }

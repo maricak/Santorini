@@ -12,7 +12,7 @@ namespace etf.santorini.km150096d.utils
                 + Vector3.forward * (y + y * Tile.DISTANCE) + Tile.OFFSET;
         }
 
-        public static void MoveHighlight(GameObject highlight, int x, int y, int height)
+        public static void MoveHighlight(Highlight highlight, int x, int y, int height)
         {
             highlight.transform.position =
                 Vector3.right * (x + x * Tile.DISTANCE)

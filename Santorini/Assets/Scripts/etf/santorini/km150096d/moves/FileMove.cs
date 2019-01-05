@@ -22,7 +22,7 @@ namespace etf.santorini.km150096d.moves
             }
             else
             {
-                Player.FinishReadingFromFile();
+                board.FinishReadingFromFile();
             }
         }
     }
