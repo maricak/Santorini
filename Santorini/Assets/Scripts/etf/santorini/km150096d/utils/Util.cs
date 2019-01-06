@@ -16,7 +16,8 @@ namespace etf.santorini.km150096d.utils
         {
             highlight.transform.position =
                 Vector3.right * (x + x * Tile.DISTANCE)
-               - Vector3.down * height * 0.10f
+               - Vector3.down * height * 0.30f
+               - Vector3.down * 0.10f
                + Vector3.forward * (y + y * Tile.DISTANCE) + Tile.OFFSET;
         }
 
@@ -25,7 +26,7 @@ namespace etf.santorini.km150096d.utils
             player.transform.position =
                 Vector3.right * (x + x * Tile.DISTANCE)
                 - Vector3.down * 0.45f
-                - Vector3.down * height * 0.10f
+                - Vector3.down * height * 0.30f
                 + Vector3.forward * (y + y * Tile.DISTANCE) + Tile.OFFSET;
         }
 
@@ -33,7 +34,8 @@ namespace etf.santorini.km150096d.utils
         {
             block.transform.position =
                 Vector3.right * (x + x * Tile.DISTANCE)
-                - Vector3.down * height * 0.10f
+                - Vector3.down * height * 0.30f
+                - Vector3.down * 0.20f
                 + Vector3.forward * (y + y * Tile.DISTANCE) + Tile.OFFSET;
         }
 
@@ -41,7 +43,7 @@ namespace etf.santorini.km150096d.utils
         {
             roof.transform.position =
                 Vector3.right * (x + x * Tile.DISTANCE)
-                - Vector3.down * height * 0.10f
+                - Vector3.down * height * 0.30f
                 + Vector3.down * 0.2f
                 + Vector3.forward * (y + y * Tile.DISTANCE) + Tile.OFFSET;
         }

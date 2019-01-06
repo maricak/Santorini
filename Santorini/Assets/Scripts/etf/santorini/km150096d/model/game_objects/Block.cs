@@ -11,7 +11,7 @@ namespace etf.santorini.km150096d.model.gameobject
             GameObject gameObject = Instantiate(board.blockPrefab) as GameObject;
             gameObject.transform.SetParent(board.transform);
             Block block = gameObject.GetComponent<Block>();
-            Util.MoveBlock(block, x, y, /*(int)Tile.GetTile(x, y).Height - 1)*/ height);
+            Util.MoveBlock(block, x, y, height-1);
         }
     }
 }

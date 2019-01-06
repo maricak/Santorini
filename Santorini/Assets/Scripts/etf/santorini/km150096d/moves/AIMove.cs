@@ -1,4 +1,5 @@
-﻿using etf.santorini.km150096d.model.interfaces;
+﻿using etf.santorini.km150096d.model.gameobject;
+using etf.santorini.km150096d.model.interfaces;
 using etf.santorini.km150096d.model.plain_objects;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ namespace etf.santorini.km150096d.moves
 {
     public abstract class AIMove : Move
     {
-        static protected int cnt = 0; 
+        static protected int cnt = 0;
 
         protected readonly int maxDepth;
         protected readonly Vector2[] bestMove = new Vector2[3];
@@ -19,10 +20,11 @@ namespace etf.santorini.km150096d.moves
 
         public override bool MouseInputNeeded()
         {
-            return false;
+            return board.Simulation;
+            //return false;
         }
 
-        public override void MakeMove(Vector2 position)
+        public sealed override void MakeMove(Vector2 position)
         {
             if (moveState == MoveState.POSITION_FIRST || moveState == MoveState.POSITION_SECOND)
             {
@@ -36,8 +38,22 @@ namespace etf.santorini.km150096d.moves
                 {
                     float alpha = Mathf.NegativeInfinity;
                     float beta = Mathf.Infinity;
-                    Debug.Log("NOVI POTEZ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                    Algorithm(bestMove, 0, id, alpha, beta);
+
+                    if(board is Board)
+                    {
+                        (board as Board).ResetSimulationLog();
+                    }
+                    
+                    var bestValue = Algorithm(bestMove, 0, id, alpha, beta);
+
+                    if (board is Board && board.Simulation)
+                    {
+                        (board as Board).AddToSimulationLog("BEST MOVE: " + bestValue +
+                            "\n\tselect(" + bestMove[0].x + "," + bestMove[0].y + ")" +
+                            "\n\tmove(" + bestMove[1].x + "," + bestMove[1].y + ")" +
+                            "\n\tbuild(" + bestMove[2].x + "," + bestMove[2].y + ")");
+                    }
+
                     Debug.Log(cnt);
                     cnt = 0;
                 }

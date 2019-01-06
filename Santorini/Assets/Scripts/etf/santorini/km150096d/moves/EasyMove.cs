@@ -1,4 +1,5 @@
-﻿using etf.santorini.km150096d.model.interfaces;
+﻿using etf.santorini.km150096d.model.gameobject;
+using etf.santorini.km150096d.model.interfaces;
 using etf.santorini.km150096d.model.plain_objects;
 using etf.santorini.km150096d.utils;
 using UnityEngine;
@@ -6,12 +7,12 @@ using UnityEngine;
 namespace etf.santorini.km150096d.moves
 {
     public class EasyMove : AIMove
-    {        
-        public static readonly float WIN_VALUE = 25f;
-        public static readonly float LOSS_VALUE = -25f;
+    {
+        public static readonly float WIN_VALUE = 150f;
+        public static readonly float LOSS_VALUE = -150f;
 
-        public EasyMove(PlayerID id, IBoard board) : base(id, board) { }    
-       
+        public EasyMove(PlayerID id, IBoard board) : base(id, board) { }
+
 
         // MINIMAX
         protected override float Algorithm(Vector2[] bestMove, int currentDepth, PlayerID player, float alpha, float beta)
@@ -77,6 +78,14 @@ namespace etf.santorini.km150096d.moves
 
                                         float currentScore = mBuild.Algorithm(currentMove, currentDepth + 1, player, alpha, beta);
 
+                                        if (currentDepth == 0 && board is Board && board.Simulation)
+                                        {
+                                            (board as Board).AddToSimulationLog(currentScore +
+                                                "\tselect(" + srcPosition.x + "," + srcPosition.y + ")" +
+                                                "\n\tmove(" + dstPosition.x + "," + dstPosition.y + ")" +
+                                                "\n\tbuild(" + buildPosition.x + "," + buildPosition.y + ")");
+                                        }
+
                                         mBuild = null;
 
                                         if (id == player)
@@ -87,7 +96,7 @@ namespace etf.santorini.km150096d.moves
                                                 bestMove[0] = srcPosition; // select
                                                 bestMove[1] = dstPosition; // move
                                                 bestMove[2] = buildPosition; // build
-                                               // Debug.Log("MAX: select(" + bestMove[0].x + "," + bestMove[0].y + ")" + "move(" + bestMove[1].x + "," + bestMove[1].y + ")" + "build(" + bestMove[2].x + "," + bestMove[2].y + ") -- Val:" + bestScore);
+                                                                             // Debug.Log("MAX: select(" + bestMove[0].x + "," + bestMove[0].y + ")" + "move(" + bestMove[1].x + "," + bestMove[1].y + ")" + "build(" + bestMove[2].x + "," + bestMove[2].y + ") -- Val:" + bestScore);
                                             }
                                         }
                                         else
@@ -123,10 +132,10 @@ namespace etf.santorini.km150096d.moves
 
         private float PlayerDistance(Vector2 position)
         {
-            return Util.Distance(board[id, 0].Position, position)
-                 + Util.Distance(board[id, 1].Position, position)
-                 - Util.Distance(board[1 - id, 0].Position, position)
-                 - Util.Distance(board[1 - id, 1].Position, position);
-        }      
+            return - Util.Distance(board[id, 0].Position, position)
+                 - Util.Distance(board[id, 1].Position, position)
+                 + Util.Distance(board[1 - id, 0].Position, position)
+                 + Util.Distance(board[1 - id, 1].Position, position);
+        }
     }
 }

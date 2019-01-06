@@ -25,8 +25,9 @@ namespace etf.santorini.km150096d.model.gameobject
         public GameObject highlightPrefab;
         public GameObject roofPrefab;
 
-        // message
-        public Canvas messageCanvas;
+        // message       
+        public Text messageText;
+        public Text simulationLog;
         #endregion
 
         #region Tiles
@@ -68,7 +69,7 @@ namespace etf.santorini.km150096d.model.gameobject
         private PlayerID winner;
 
         private float deltaTime = 0.0f;
-        private float threshold = 0.0f;
+        private readonly float threshold = 0.1f;
 
         public bool Simulation { set; get; }
         public int MaxDepth { set; get; }
@@ -99,6 +100,7 @@ namespace etf.santorini.km150096d.model.gameobject
             SelectedPlayer = players[0, 0];
 
             UpdateMessage("Turn: " + TurnId);
+            AddToSimulationLog("SIMULATION LOG: ");
         }
         private void Update()
         {
@@ -245,7 +247,16 @@ namespace etf.santorini.km150096d.model.gameobject
         #region Message
         public void UpdateMessage(string message)
         {
-            messageCanvas.GetComponentInChildren<Text>().text = message;
+            // messageCanvas.GetComponentInChildren<Text>().text = message;
+            messageText.text = message;
+        }
+        public void AddToSimulationLog(string message)
+        {
+            simulationLog.text += (message + "\n");
+        }
+        public void ResetSimulationLog()
+        {
+            simulationLog.text = "SIMULATION LOG:\n";
         }
         #endregion
 
@@ -259,11 +270,7 @@ namespace etf.santorini.km150096d.model.gameobject
             loadFromFile = Menu.Instance.loadFromFile;
         }
         public void InitPlayerMoves()
-        {
-            if(Simulation)
-            {
-                threshold = 1f;
-            }
+        {            
             fileMoves[0] = new FileMove(PlayerID.PLAYER0, this);
             fileMoves[1] = new FileMove(PlayerID.PLAYER1, this);
 

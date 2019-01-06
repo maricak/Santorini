@@ -52,7 +52,7 @@ namespace etf.santorini.km150096d.model.gameobject
         #region Highlight
         public void SetHighlight(int x, int y)
         {
-            Util.MoveHighlight(highlight, x, y, (int)Height);
+            Util.MoveHighlight(highlight, x, y, (int)Height - 1);
             highlight.gameObject.SetActive(true);
         }
         public void ResetHighlght()

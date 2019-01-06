@@ -218,7 +218,7 @@ namespace etf.santorini.km150096d.moves
                 {
                     if (tile.Height == Height.ROOF)
                     {
-                        Roof.GenerateRoof(x, y, board as Board, (int)tile.Height);
+                        Roof.GenerateRoof(x, y, board as Board, (int)tile.Height - 1);
                     }
                     else
                     {

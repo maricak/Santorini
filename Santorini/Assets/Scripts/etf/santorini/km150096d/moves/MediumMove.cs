@@ -1,4 +1,5 @@
-﻿using etf.santorini.km150096d.model.interfaces;
+﻿using etf.santorini.km150096d.model.gameobject;
+using etf.santorini.km150096d.model.interfaces;
 using etf.santorini.km150096d.model.plain_objects;
 using etf.santorini.km150096d.utils;
 using UnityEngine;
@@ -8,8 +9,8 @@ namespace etf.santorini.km150096d.moves
     public class MediumMove : AIMove
     { 
 
-        public static readonly float WIN_VALUE = 25f;
-        public static readonly float LOSS_VALUE = -25f;
+        public static readonly float WIN_VALUE = 150f;
+        public static readonly float LOSS_VALUE = -150f;
 
         public MediumMove(PlayerID id, IBoard board) : base(id, board) { }
 
@@ -79,6 +80,14 @@ namespace etf.santorini.km150096d.moves
 
                                         float currentScore = mBuild.Algorithm(currentMove, currentDepth + 1, player, alpha, beta);
 
+                                        if (currentDepth == 0 && board is Board && board.Simulation)
+                                        {
+                                            (board as Board).AddToSimulationLog(currentScore +
+                                                "\tselect(" + srcPosition.x + "," + srcPosition.y + ")" +
+                                                "\n\tmove(" + dstPosition.x + "," + dstPosition.y + ")" +
+                                                "\n\tbuild(" + buildPosition.x + "," + buildPosition.y + ")");
+                                        }
+
                                         mBuild = null;
 
                                         if (id == player)
@@ -143,10 +152,10 @@ namespace etf.santorini.km150096d.moves
 
         private float PlayerDistance(Vector2 position)
         {
-            return Util.Distance(board[id, 0].Position, position)
-                 + Util.Distance(board[id, 1].Position, position)
-                 - Util.Distance(board[1 - id, 0].Position, position)
-                 - Util.Distance(board[1 - id, 1].Position, position);
+            return - Util.Distance(board[id, 0].Position, position)
+                 - Util.Distance(board[id, 1].Position, position)
+                 + Util.Distance(board[1 - id, 0].Position, position)
+                 + Util.Distance(board[1 - id, 1].Position, position);
         }
     }
 }
