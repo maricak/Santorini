@@ -7,7 +7,7 @@ using UnityEngine;
 namespace etf.santorini.km150096d.moves
 {
     public class MediumMove : AIMove
-    { 
+    {
 
         public static readonly float WIN_VALUE = 150f;
         public static readonly float LOSS_VALUE = -150f;
@@ -82,17 +82,17 @@ namespace etf.santorini.km150096d.moves
 
                                         if (currentDepth == 0 && board is Board && board.Simulation)
                                         {
-                                            (board as Board).AddToSimulationLog(currentScore +
-                                                "\tselect(" + srcPosition.x + "," + srcPosition.y + ")" +
-                                                "\n\tmove(" + dstPosition.x + "," + dstPosition.y + ")" +
-                                                "\n\tbuild(" + buildPosition.x + "," + buildPosition.y + ")");
+                                            (board as Board).AddToSimulationLog(
+                                                "(" + srcPosition.x + "," + srcPosition.y + ")" +
+                                                "(" + dstPosition.x + "," + dstPosition.y + ")" +
+                                                "(" + buildPosition.x + "," + buildPosition.y + ") \t" + currentScore);
                                         }
 
                                         mBuild = null;
 
                                         if (id == player)
                                         {
-                                           // Debug.Log("MAX -- alpha=" + alpha + "beta=" + beta + "current=" + currentScore + "best=" + bestScore);
+                                            // Debug.Log("MAX -- alpha=" + alpha + "beta=" + beta + "current=" + currentScore + "best=" + bestScore);
 
                                             if (currentScore > bestScore)
                                             {
@@ -102,7 +102,7 @@ namespace etf.santorini.km150096d.moves
                                                 bestMove[2] = buildPosition; // build
 
                                                 alpha = Mathf.Max(alpha, bestScore);
-                                                if(bestScore >= beta)
+                                                if (bestScore >= beta)
                                                 {
                                                     //Debug.Log("ODSECANJE beta=" + beta + "alpha=" + alpha + "current" + currentScore);
                                                     return bestScore;
@@ -113,7 +113,7 @@ namespace etf.santorini.km150096d.moves
                                         }
                                         else
                                         {
-                                          //  Debug.Log("MIN -- alpha=" + alpha + "beta=" + beta + "current=" + currentScore + "best=" + bestScore);
+                                            //  Debug.Log("MIN -- alpha=" + alpha + "beta=" + beta + "current=" + currentScore + "best=" + bestScore);
                                             if (currentScore < bestScore)
                                             {
                                                 bestScore = currentScore;
@@ -122,9 +122,9 @@ namespace etf.santorini.km150096d.moves
                                                 bestMove[2] = buildPosition; // build
 
                                                 beta = Mathf.Min(beta, bestScore);
-                                                if(bestScore <= alpha)
+                                                if (bestScore <= alpha)
                                                 {
-                                               //     Debug.Log("ODSECANJE alpha=" + alpha + "beta=" + beta + "current" + currentScore);
+                                                    //     Debug.Log("ODSECANJE alpha=" + alpha + "beta=" + beta + "current" + currentScore);
                                                     return bestScore;
                                                 }
 
@@ -152,7 +152,7 @@ namespace etf.santorini.km150096d.moves
 
         private float PlayerDistance(Vector2 position)
         {
-            return - Util.Distance(board[id, 0].Position, position)
+            return -Util.Distance(board[id, 0].Position, position)
                  - Util.Distance(board[id, 1].Position, position)
                  + Util.Distance(board[1 - id, 0].Position, position)
                  + Util.Distance(board[1 - id, 1].Position, position);

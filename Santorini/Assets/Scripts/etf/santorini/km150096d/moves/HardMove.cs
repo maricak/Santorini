@@ -81,10 +81,10 @@ namespace etf.santorini.km150096d.moves
 
                                         if (currentDepth == 0 && board is Board && board.Simulation)
                                         {
-                                            (board as Board).AddToSimulationLog(currentScore +
-                                                "\tselect(" + srcPosition.x + "," + srcPosition.y + ")" +
-                                                "\n\tmove(" + dstPosition.x + "," + dstPosition.y + ")" +
-                                                "\n\tbuild(" + buildPosition.x + "," + buildPosition.y + ")");
+                                            (board as Board).AddToSimulationLog(
+                                              "(" + srcPosition.x + "," + srcPosition.y + ")" +
+                                              "(" + dstPosition.x + "," + dstPosition.y + ")" +
+                                              "(" + buildPosition.x + "," + buildPosition.y + ") \t" + currentScore);
                                         }
 
                                         mBuild = null;

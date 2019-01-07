@@ -6,6 +6,7 @@ using etf.santorini.km150096d.utils;
 using etf.santorini.km150096d.menu;
 using etf.santorini.km150096d.model.interfaces;
 using etf.santorini.km150096d.moves;
+using UnityEngine.SceneManagement;
 
 namespace etf.santorini.km150096d.model.gameobject
 {
@@ -28,6 +29,7 @@ namespace etf.santorini.km150096d.model.gameobject
         // message       
         public Text messageText;
         public Text simulationLog;
+        public Button newGameButton;
         #endregion
 
         #region Tiles
@@ -84,6 +86,8 @@ namespace etf.santorini.km150096d.model.gameobject
         {
             Instance = this;
 
+            newGameButton.onClick.AddListener( () => SceneManager.LoadScene("menu") );
+
             TurnId = PlayerID.PLAYER0;
             // initialize files
             FileManager.Instance.SetOutput();
@@ -105,6 +109,11 @@ namespace etf.santorini.km150096d.model.gameobject
         private void Update()
         {
             deltaTime += Time.deltaTime;
+
+            if (Input.GetKey("escape"))
+            {
+                Application.Quit();
+            }
 
             // update mouse postion
             UpdateMouseOver();
@@ -134,6 +143,7 @@ namespace etf.santorini.km150096d.model.gameobject
                 }
                 CheckGameOver();
             }
+
         }
         private void OnApplicationQuit()
         {

@@ -5,8 +5,6 @@ using etf.santorini.km150096d.model.interfaces;
 
 namespace etf.santorini.km150096d.model.gameobject
 {
-
-
     public class Tile : MonoBehaviour, ITile
     {
         #region Constants

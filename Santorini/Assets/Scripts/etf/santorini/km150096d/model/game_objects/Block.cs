@@ -1,12 +1,11 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using etf.santorini.km150096d.utils;
 
 namespace etf.santorini.km150096d.model.gameobject
 {
     public class Block : MonoBehaviour
     {
-        internal static void GenerateBlock(int x, int y, Board board, int height)
+        public static void GenerateBlock(int x, int y, Board board, int height)
         {
             GameObject gameObject = Instantiate(board.blockPrefab) as GameObject;
             gameObject.transform.SetParent(board.transform);

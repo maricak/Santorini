@@ -18,7 +18,7 @@ namespace etf.santorini.km150096d.moves
             maxDepth = board.MaxDepth;
         }
 
-        public override bool MouseInputNeeded()
+        public sealed override bool MouseInputNeeded()
         {
             return board.Simulation;
             //return false;
@@ -48,7 +48,7 @@ namespace etf.santorini.km150096d.moves
 
                     if (board is Board && board.Simulation)
                     {
-                        (board as Board).AddToSimulationLog("BEST MOVE: " + bestValue +
+                        (board as Board).AddToSimulationLog("BEST MOVE:\t" + bestValue +
                             "\n\tselect(" + bestMove[0].x + "," + bestMove[0].y + ")" +
                             "\n\tmove(" + bestMove[1].x + "," + bestMove[1].y + ")" +
                             "\n\tbuild(" + bestMove[2].x + "," + bestMove[2].y + ")");

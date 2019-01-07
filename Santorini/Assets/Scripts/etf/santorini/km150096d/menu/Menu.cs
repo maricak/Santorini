@@ -37,6 +37,14 @@ namespace etf.santorini.km150096d.menu
             Instance.Init();
         }
 
+        private void Update()
+        {
+            if (Input.GetKey("escape"))
+            {
+                Application.Quit();
+            }
+        }
+
         private void Init()
         {
             player1.onValueChanged.AddListener(ChangePlayer);

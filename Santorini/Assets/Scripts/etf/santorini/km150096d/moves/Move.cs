@@ -24,12 +24,12 @@ namespace etf.santorini.km150096d.moves
             this.id = id;
             this.board = board;
         }
-        internal void CopyMove(Move move)
+        public void CopyMove(Move move)
         {
             moveState = move.moveState;
             possibleMoves = move.possibleMoves;
         }
-        internal void CopyPossibleMoves(Move move)
+        public void CopyPossibleMoves(Move move)
         {
             for(int i = 0; i < Board.DIM; i++)
             {
