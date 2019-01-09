@@ -90,7 +90,10 @@ namespace etf.santorini.km150096d.utils
         #region output
         public void SaveFile()
         {
-            output.Close();
+            if (output.BaseStream != null)
+            {
+                output.Close();
+            }
         }
 
         public void SetOutput()

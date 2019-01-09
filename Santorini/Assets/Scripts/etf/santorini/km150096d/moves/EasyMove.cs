@@ -2,6 +2,7 @@
 using etf.santorini.km150096d.model.interfaces;
 using etf.santorini.km150096d.model.plain_objects;
 using etf.santorini.km150096d.utils;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace etf.santorini.km150096d.moves
@@ -11,7 +12,10 @@ namespace etf.santorini.km150096d.moves
         public static readonly float WIN_VALUE = 150f;
         public static readonly float LOSS_VALUE = -150f;
 
-        public EasyMove(PlayerID id, IBoard board) : base(id, board) { }
+        public EasyMove(PlayerID id, IBoard board) : base(id, board)
+        {
+            this.type = MoveType.EASY;
+        }
 
 
         // MINIMAX
@@ -27,104 +31,63 @@ namespace etf.santorini.km150096d.moves
             }
             else if (currentDepth == maxDepth)
             {
-                var val = Evaluate(bestMove);
-                //Debug.Log("EVAL: select(" + bestMove[0].x + "," + bestMove[0].y + ")" + "move(" + bestMove[1].x + "," + bestMove[1].y + ")" + "build(" + bestMove[2].x + "," + bestMove[2].y + ") -- Val:" + val);
-                cnt++;
-                return val;
+                return evaluationValue;               
             }
 
-            float bestScore = (id == player) ? Mathf.NegativeInfinity : Mathf.Infinity;
+            float bestScore = ((maxDepth - currentDepth) % 2 == 1) ? Mathf.NegativeInfinity : Mathf.Infinity;
 
-            // za svakog graditelja
-            for (int k = 0; k < 2; k++)
+            List<AIMove> moves = GetAllPossibleMoves();
+
+            foreach (EasyMove move in moves)
             {
-                //select player
-                Vector2 srcPosition = board[id, k].Position;
-                EasyMove mSelect = CopyBoardAndCreateMove(this, MoveType.EASY) as EasyMove;
-                mSelect.SelectPlayer(srcPosition);
+                Vector2[] currentMove = new Vector2[3];
+                currentMove[0] = move.move[0]; // select
+                currentMove[1] = move.move[1]; // move
+                currentMove[2] = move.move[2]; // build
 
-                // for all possible moves
-                for (int i = 0; i < BoardPO.DIM; i++)
+                //Debug.Log("BOARD STATE select(" + currentMove[0].x + "," + currentMove[0].y + ")" + "move(" + currentMove[1].x + "," + currentMove[1].y + ")" + "build(" + currentMove[2].x + "," + currentMove[2].y + ") -- Val:" + move.evaluationValue);
+
+                float currentScore = move.Algorithm(currentMove, currentDepth + 1, player, alpha, beta);
+
+                //Debug.Log("ALGO RESULT select(" + currentMove[0].x + "," + currentMove[0].y + ")" + "move(" + currentMove[1].x + "," + currentMove[1].y + ")" + "build(" + currentMove[2].x + "," + currentMove[2].y + ") -- Val:" + move.evaluationValue);
+
+                if (currentDepth == 0 && board is Board && board.Simulation)
                 {
-                    for (int j = 0; j < BoardPO.DIM; j++)
+                    (board as Board).AddToSimulationLog(
+                       "(" + currentMove[0].x + "," + currentMove[0].y + ")" +
+                       "(" + currentMove[1].x + "," + currentMove[1].y + ")" +
+                       "(" + currentMove[2].x + "," + currentMove[2].y + ") \t" + currentScore);
+                }
+                if ((maxDepth - currentDepth) % 2 == 1) // odd - max 
+                {
+                    if (currentScore > bestScore)
                     {
-                        if (mSelect.possibleMoves[i, j])
-                        {
-                            // make move
-                            Vector2 dstPosition = new Vector2(i, j);
-                            EasyMove mMove = CopyBoardAndCreateMove(mSelect, MoveType.EASY) as EasyMove;
-                            mMove.MovePlayer(dstPosition);
+                        bestScore = currentScore;
+                        bestMove[0] = move.move[0]; // select
+                        bestMove[1] = move.move[1]; // move
+                        bestMove[2] = move.move[2]; // build
 
-                            // for all possible builds after the move
-                            for (int m = 0; m < BoardPO.DIM; m++)
-                            {
-                                for (int n = 0; n < BoardPO.DIM; n++)
-                                {
-                                    if (mMove.possibleMoves[m, n])
-                                    {
-                                        // build
-                                        Vector2 buildPosition = new Vector2(m, n);
-                                        EasyMove mBuild = CopyBoardAndCreateMove(mMove, MoveType.EASY) as EasyMove;
-                                        mBuild.Build(buildPosition);
-
-                                        //mBuild.board.ChangeTurn();
-                                        mBuild.id = 1 - mBuild.id;
-
-                                        Vector2[] currentMove = new Vector2[3];
-                                        currentMove[0] = srcPosition; // select
-                                        currentMove[1] = dstPosition; // move
-                                        currentMove[2] = buildPosition;
-
-
-                                        float currentScore = mBuild.Algorithm(currentMove, currentDepth + 1, player, alpha, beta);
-
-                                        if (currentDepth == 0 && board is Board && board.Simulation)
-                                        {
-                                            (board as Board).AddToSimulationLog(
-                                               "(" + srcPosition.x + "," + srcPosition.y + ")" +
-                                               "(" + dstPosition.x + "," + dstPosition.y + ")" +
-                                               "(" + buildPosition.x + "," + buildPosition.y + ") \t" + currentScore);
-                                        }
-
-                                        mBuild = null;
-
-                                        if (id == player)
-                                        {
-                                            if (currentScore > bestScore)
-                                            {
-                                                bestScore = currentScore;
-                                                bestMove[0] = srcPosition; // select
-                                                bestMove[1] = dstPosition; // move
-                                                bestMove[2] = buildPosition; // build
-                                                                             // Debug.Log("MAX: select(" + bestMove[0].x + "," + bestMove[0].y + ")" + "move(" + bestMove[1].x + "," + bestMove[1].y + ")" + "build(" + bestMove[2].x + "," + bestMove[2].y + ") -- Val:" + bestScore);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            if (currentScore < bestScore)
-                                            {
-                                                bestScore = currentScore;
-                                                bestMove[0] = srcPosition; // select
-                                                bestMove[1] = dstPosition; // move
-                                                bestMove[2] = buildPosition; // build
-
-                                                //Debug.Log("MIN: select(" + bestMove[0].x + "," + bestMove[0].y + ")" + "move(" + bestMove[1].x + "," + bestMove[1].y + ")" + "build(" + bestMove[2].x + "," + bestMove[2].y + ") -- Val:" + bestScore);
-
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            mMove = null;
-                        }
+                        //Debug.Log("MAX: select(" + bestMove[0].x + "," + bestMove[0].y + ")" + "move(" + bestMove[1].x + "," + bestMove[1].y + ")" + "build(" + bestMove[2].x + "," + bestMove[2].y + ") -- Val:" + bestScore);
                     }
                 }
+                else
+                {
+                    if (currentScore < bestScore)
+                    {
+                        bestScore = currentScore;
+                        bestMove[0] = move.move[0]; // select
+                        bestMove[1] = move.move[1]; // move
+                        bestMove[2] = move.move[2]; // build
 
-                mSelect = null;
+                        //Debug.Log("MIN: select(" + bestMove[0].x + "," + bestMove[0].y + ")" + "move(" + bestMove[1].x + "," + bestMove[1].y + ")" + "build(" + bestMove[2].x + "," + bestMove[2].y + ") -- Val:" + bestScore);
+                    }
+                }
             }
+            moves = null;
+
             return bestScore;
         }
+
         protected override float Evaluate(Vector2[] move)
         {
             return (int)board[move[1]].Height - 1 + ((int)board[move[2]].Height - 1) * PlayerDistance(move[2]);
@@ -132,10 +95,10 @@ namespace etf.santorini.km150096d.moves
 
         private float PlayerDistance(Vector2 position)
         {
-            return - Util.Distance(board[id, 0].Position, position)
-                 - Util.Distance(board[id, 1].Position, position)
-                 + Util.Distance(board[1 - id, 0].Position, position)
-                 + Util.Distance(board[1 - id, 1].Position, position);
+            return +Util.Distance(board[id, 0].Position, position)
+                 + Util.Distance(board[id, 1].Position, position)
+                 - Util.Distance(board[1 - id, 0].Position, position)
+                 - Util.Distance(board[1 - id, 1].Position, position);
         }
     }
 }

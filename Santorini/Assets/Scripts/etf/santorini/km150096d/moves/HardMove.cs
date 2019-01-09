@@ -11,7 +11,10 @@ namespace etf.santorini.km150096d.moves
         public static readonly float WIN_VALUE = 150f;
         public static readonly float LOSS_VALUE = -150f;
 
-        public HardMove(PlayerID id, IBoard board) : base(id, board) { }
+        public HardMove(PlayerID id, IBoard board) : base(id, board)
+        {
+            this.type = MoveType.HARD;
+        }
 
         // ALPHA BETA MINIMAX
         protected override float Algorithm(Vector2[] bestMove, int currentDepth, PlayerID player, float alpha, float beta)

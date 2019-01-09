@@ -86,7 +86,11 @@ namespace etf.santorini.km150096d.model.gameobject
         {
             Instance = this;
 
-            newGameButton.onClick.AddListener( () => SceneManager.LoadScene("menu") );
+            newGameButton.onClick.AddListener(() =>
+            {
+                SceneManager.LoadScene("menu");
+                FileManager.Instance.SaveFile();
+            });
 
             TurnId = PlayerID.PLAYER0;
             // initialize files
@@ -142,6 +146,10 @@ namespace etf.santorini.km150096d.model.gameobject
                     }
                 }
                 CheckGameOver();
+            }
+            else
+            {
+                FileManager.Instance.SaveFile();
             }
 
         }
@@ -280,7 +288,7 @@ namespace etf.santorini.km150096d.model.gameobject
             loadFromFile = Menu.Instance.loadFromFile;
         }
         public void InitPlayerMoves()
-        {            
+        {
             fileMoves[0] = new FileMove(PlayerID.PLAYER0, this);
             fileMoves[1] = new FileMove(PlayerID.PLAYER1, this);
 
