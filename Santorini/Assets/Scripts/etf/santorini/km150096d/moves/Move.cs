@@ -299,6 +299,7 @@ namespace etf.santorini.km150096d.moves
 
         public bool IsWinner()
         {
+            Debug.Log("Is winner" + moveState);
             if (moveState == MoveState.POSITION_FIRST || moveState == MoveState.POSITION_SECOND)
             {
                 return false;
@@ -334,7 +335,9 @@ namespace etf.santorini.km150096d.moves
             if (moveState == MoveState.SELECT)
             {
                 // is there a builder that can be selected and than moved 
-                return CanMove(new Vector2[] { board[id, 0].Position, board[id, 1].Position });
+
+               // return CanMove(new Vector2[] { board[id, 0].Position, board[id, 1].Position });
+                return CanMove(board[id, 0].Position) || CanMove(board[id, 1].Position);
             }
             else if (moveState == MoveState.BUILD)
             {
@@ -343,12 +346,12 @@ namespace etf.santorini.km150096d.moves
             }
             return true;
         }
-        public bool CanMove(Vector2[] playerPositions)
+        public bool CanMove(Vector2/*[]*/ playerPosition/*s*/)
         {
-            for (int k = 0; k < 2; k++)
-            {
-                int x = (int)playerPositions[k].x;
-                int y = (int)playerPositions[k].y;
+            //for (int k = 0; k < 2; k++)
+            //{
+                int x = (int)playerPosition/*s[k]*/.x;
+                int y = (int)playerPosition/*s[k]*/.y;
                 ITile playerTile = board[x, y];
                 for (int i = 0; i < Board.DIM; i++)
                 {
@@ -371,7 +374,7 @@ namespace etf.santorini.km150096d.moves
                             }
                         }
                     }
-                }
+               // }
             }
             return false;
         }
@@ -412,8 +415,7 @@ namespace etf.santorini.km150096d.moves
                     return new MediumMove(id, board);
                 case MoveType.HARD:
                     return new HardMove(id, board);
-            }
-            // TODO dodati!
+            }         
 
             return new HumanMove(id, board);
         }

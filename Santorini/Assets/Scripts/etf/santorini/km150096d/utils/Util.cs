@@ -50,7 +50,8 @@ namespace etf.santorini.km150096d.utils
         
         public static float Distance(Vector2 first, Vector2 second)
         {
-            return Mathf.Abs(first.x - second.x) + Mathf.Abs(first.y - second.y);
+            return Mathf.Sqrt(Mathf.Pow(first.x - second.x, 2) + Mathf.Pow(first.y - second.y, 2));
+            //return Mathf.Abs(first.x - second.x) + Mathf.Abs(first.y - second.y);
         }
     }
 }

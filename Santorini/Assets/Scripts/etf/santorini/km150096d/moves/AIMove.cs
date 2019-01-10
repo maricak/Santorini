@@ -14,8 +14,14 @@ namespace etf.santorini.km150096d.moves
         protected Vector2[] move = new Vector2[3];
         private int moveCount = 0;
 
+        // TODO kopirati win player kod kreiranja AIMovea
+        protected IPlayer winningPlayer = new PlayerPO();
+      
+
         protected MoveType type;
         protected float evaluationValue;
+
+
 
         public AIMove(PlayerID id, IBoard board) : base(id, board)
         {
@@ -60,7 +66,7 @@ namespace etf.santorini.km150096d.moves
                             "\n\tbuild(" + move[2].x + "," + move[2].y + ")");
                     }
 
-                    Debug.Log(cnt);
+                    //Debug.Log(cnt);
                     cnt = 0;
                 }
                 base.MakeMove(move[moveCount]); // select
@@ -70,6 +76,7 @@ namespace etf.santorini.km150096d.moves
 
         protected abstract float Algorithm(Vector2[] bestMove, int currentDepth, PlayerID player, float alpha, float beta);
         protected abstract float Evaluate(Vector2[] bestMove);
+        protected virtual void FindWinningPlayer() { }
         private Vector2 RandomPosition()
         {
             return new Vector2(Random.Range(0, 5), Random.Range(0, 5));
@@ -77,21 +84,31 @@ namespace etf.santorini.km150096d.moves
         protected AIMove CopyBoardAndCreateMove(Move other, MoveType type)
         {
             IBoard currentBoard = new BoardPO(other.board);
-            Move m = CreateMove(type, id, currentBoard);
+            AIMove m = CreateMove(type, id, currentBoard) as AIMove;
             m.CopyPossibleMoves(other);
-            (m as AIMove).moveState = MoveState.SELECT;
+            m.moveState = MoveState.SELECT;
             return m as AIMove;
+        }
+        private void CopyWinningPlayer(AIMove other)
+        {
+            winningPlayer.Position = other.winningPlayer.Position;
+            winningPlayer.Id = other.winningPlayer.Id;
+            //Debug.Log("copy winning player me:" + winningPlayer.Position.x + winningPlayer.Position.y + "other" + other.winningPlayer.Position.x + other.winningPlayer.Position.y);
         }
 
         protected List<AIMove> GetAllPossibleMoves()
         {
             List<AIMove> moves = new List<AIMove>();
 
+            FindWinningPlayer();
+
             for (int k = 0; k < 2; k++)
             {
                 //select player
                 Vector2 srcPosition = board[id, k].Position;
-                EasyMove mSelect = CopyBoardAndCreateMove(this, MoveType.EASY) as EasyMove;
+                AIMove mSelect = CopyBoardAndCreateMove(this, type);
+                // izracunati winnig player i kopirat ga u narednsa stanja, 
+
                 mSelect.SelectPlayer(srcPosition);
 
                 // for all possible moves
@@ -119,15 +136,17 @@ namespace etf.santorini.km150096d.moves
                                         mBuild.Build(buildPosition);
 
                                         mBuild.move = new Vector2[] { srcPosition, dstPosition, buildPosition };
+
+                                        mBuild.CopyWinningPlayer(this);
                                         mBuild.evaluationValue = mBuild.Evaluate(mBuild.move);
 
                                         // change turn
                                         mBuild.board.ChangeTurn();
                                         mBuild.id = 1 - mBuild.id;
 
-                                       /* mBuild.srcPosition = srcPosition;
-                                        mBuild.dstPosition = dstPosition;
-                                        mBuild.buildPosition = buildPosition;*/
+                                        /* mBuild.srcPosition = srcPosition;
+                                         mBuild.dstPosition = dstPosition;
+                                         mBuild.buildPosition = buildPosition;*/
                                         moves.Add(mBuild);
                                     }
                                 }
@@ -140,5 +159,6 @@ namespace etf.santorini.km150096d.moves
             }
             return moves;
         }
+
     }
 }

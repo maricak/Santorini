@@ -1,6 +1,5 @@
 ﻿using etf.santorini.km150096d.model.gameobject;
 using etf.santorini.km150096d.model.interfaces;
-using etf.santorini.km150096d.model.plain_objects;
 using etf.santorini.km150096d.utils;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,11 +22,13 @@ namespace etf.santorini.km150096d.moves
         {
             if (IsWinner())
             {
-                return WIN_VALUE;
+                Debug.Log("WINNER" + (((maxDepth - currentDepth) % 2 == 1) ? "MAX" : "MIN"));
+                return ((maxDepth - currentDepth) % 2 == 1) ? WIN_VALUE : LOSS_VALUE;
             }
             else if (!HasPossibleMoves())
             {
-                return LOSS_VALUE;
+                Debug.Log("LOSER" + (((maxDepth - currentDepth) % 2 == 1) ? "MAX" : "MIN"));
+                return ((maxDepth - currentDepth) % 2 == 1) ? LOSS_VALUE : WIN_VALUE;
             }
             else if (currentDepth == maxDepth)
             {
@@ -54,9 +55,9 @@ namespace etf.santorini.km150096d.moves
                 if (currentDepth == 0 && board is Board && board.Simulation)
                 {
                     (board as Board).AddToSimulationLog(
-                       "(" + currentMove[0].x + "," + currentMove[0].y + ")" +
-                       "(" + currentMove[1].x + "," + currentMove[1].y + ")" +
-                       "(" + currentMove[2].x + "," + currentMove[2].y + ") \t" + currentScore);
+                       "(" + move.move[0].x + "," + move.move[0].y + ")" +
+                       "(" + move.move[1].x + "," + move.move[1].y + ")" +
+                       "(" + move.move[2].x + "," + move.move[2].y + ") \t" + currentScore);
                 }
                 if ((maxDepth - currentDepth) % 2 == 1) // odd - max 
                 {
@@ -71,7 +72,7 @@ namespace etf.santorini.km150096d.moves
                         alpha = Mathf.Max(alpha, bestScore);
                         if (bestScore >= beta)
                         {
-                            Debug.Log("ODSECANJE beta=" + beta + "alpha=" + alpha + "current" + currentScore);
+                            //Debug.Log("ODSECANJE beta=" + beta + "alpha=" + alpha + "current" + currentScore);
                             return bestScore;
                         }
                     }
@@ -89,7 +90,7 @@ namespace etf.santorini.km150096d.moves
                         beta = Mathf.Min(beta, bestScore);
                         if (bestScore <= alpha)
                         {
-                               Debug.Log("ODSECANJE alpha=" + alpha + "beta=" + beta + "current" + currentScore);
+                               //Debug.Log("ODSECANJE alpha=" + alpha + "beta=" + beta + "current" + currentScore);
                             return bestScore;
                         }
                     }

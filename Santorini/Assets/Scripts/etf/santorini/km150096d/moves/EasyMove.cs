@@ -23,15 +23,15 @@ namespace etf.santorini.km150096d.moves
         {
             if (IsWinner())
             {
-                return WIN_VALUE;
+                return ((maxDepth - currentDepth) % 2 == 1) ? WIN_VALUE : LOSS_VALUE;
             }
             else if (!HasPossibleMoves())
             {
-                return LOSS_VALUE;
+                return ((maxDepth - currentDepth) % 2 == 1) ? LOSS_VALUE : WIN_VALUE;
             }
             else if (currentDepth == maxDepth)
             {
-                return evaluationValue;               
+                return evaluationValue;
             }
 
             float bestScore = ((maxDepth - currentDepth) % 2 == 1) ? Mathf.NegativeInfinity : Mathf.Infinity;
@@ -54,9 +54,9 @@ namespace etf.santorini.km150096d.moves
                 if (currentDepth == 0 && board is Board && board.Simulation)
                 {
                     (board as Board).AddToSimulationLog(
-                       "(" + currentMove[0].x + "," + currentMove[0].y + ")" +
-                       "(" + currentMove[1].x + "," + currentMove[1].y + ")" +
-                       "(" + currentMove[2].x + "," + currentMove[2].y + ") \t" + currentScore);
+                       "(" + move.move[0].x + "," + move.move[0].y + ")" +
+                       "(" + move.move[1].x + "," + move.move[1].y + ")" +
+                       "(" + move.move[2].x + "," + move.move[2].y + ") \t" + currentScore);
                 }
                 if ((maxDepth - currentDepth) % 2 == 1) // odd - max 
                 {
