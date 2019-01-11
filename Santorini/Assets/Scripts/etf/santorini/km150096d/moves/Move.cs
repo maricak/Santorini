@@ -299,7 +299,7 @@ namespace etf.santorini.km150096d.moves
 
         public bool IsWinner()
         {
-            Debug.Log("Is winner" + moveState);
+            //Debug.Log("Is winner" + moveState);
             if (moveState == MoveState.POSITION_FIRST || moveState == MoveState.POSITION_SECOND)
             {
                 return false;

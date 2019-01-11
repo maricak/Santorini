@@ -8,8 +8,8 @@ namespace etf.santorini.km150096d.model.gameobject
         private static readonly Color[] colors = new Color[3] 
         {
             new Color(0, 0, 0),
-            new Color(0.5f, 0.5f, 0.5f),
-            new Color(1, 1, 1)
+            new Color(0.15f, 0.15f, 0.15f),
+            new Color(0.3f, 0.3f, 0.3f)
         };
         public static void GenerateBlock(int x, int y, Board board, int height)
         {

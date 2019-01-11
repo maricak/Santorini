@@ -8,18 +8,20 @@ namespace etf.santorini.km150096d.moves
 {
     public abstract class AIMove : Move
     {
+        public static readonly float WIN_VALUE = 300f;
+        public static readonly float LOSS_VALUE = -300f;
+
         static protected int cnt = 0;
 
         protected readonly int maxDepth;
         protected Vector2[] move = new Vector2[3];
         private int moveCount = 0;
 
-        // TODO kopirati win player kod kreiranja AIMovea
-        protected IPlayer winningPlayer = new PlayerPO();
-      
-
         protected MoveType type;
+
+        protected IPlayer winningPlayer = new PlayerPO();
         protected float evaluationValue;
+        protected bool isWinner = false;
 
 
 
@@ -55,7 +57,7 @@ namespace etf.santorini.km150096d.moves
                     }
 
                     var bestMove = new Vector2[3];
-                    var bestValue = Algorithm(bestMove, 0, id, alpha, beta);
+                    var bestValue = Algorithm(bestMove, 0, alpha, beta);
                     move = bestMove;
 
                     if (board is Board && board.Simulation)
@@ -74,7 +76,7 @@ namespace etf.santorini.km150096d.moves
             }
         }
 
-        protected abstract float Algorithm(Vector2[] bestMove, int currentDepth, PlayerID player, float alpha, float beta);
+        protected abstract float Algorithm(Vector2[] bestMove, int currentDepth, float alpha, float beta);
         protected abstract float Evaluate(Vector2[] bestMove);
         protected virtual void FindWinningPlayer() { }
         private Vector2 RandomPosition()
@@ -138,7 +140,14 @@ namespace etf.santorini.km150096d.moves
                                         mBuild.move = new Vector2[] { srcPosition, dstPosition, buildPosition };
 
                                         mBuild.CopyWinningPlayer(this);
-                                        mBuild.evaluationValue = mBuild.Evaluate(mBuild.move);
+                                        if (mBuild.board[dstPosition].Height == Height.H3)
+                                        {
+                                            mBuild.isWinner = true;
+                                        }
+                                        else
+                                        {
+                                            mBuild.evaluationValue = mBuild.Evaluate(mBuild.move);
+                                        }
 
                                         // change turn
                                         mBuild.board.ChangeTurn();

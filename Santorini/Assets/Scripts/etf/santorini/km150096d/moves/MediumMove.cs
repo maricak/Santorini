@@ -8,29 +8,15 @@ namespace etf.santorini.km150096d.moves
 {
     public class MediumMove : AIMove
     {
-
-        public static readonly float WIN_VALUE = 150f;
-        public static readonly float LOSS_VALUE = -150f;
-
         public MediumMove(PlayerID id, IBoard board) : base(id, board)
         {
             this.type = MoveType.MEDIUM;
         }
-        
+
         // ALPHA BETA MINIMAX
-        protected override float Algorithm(Vector2[] bestMove, int currentDepth, PlayerID player, float alpha, float beta)
+        protected override float Algorithm(Vector2[] bestMove, int currentDepth, float alpha, float beta)
         {
-            if (IsWinner())
-            {
-                Debug.Log("WINNER" + (((maxDepth - currentDepth) % 2 == 1) ? "MAX" : "MIN"));
-                return ((maxDepth - currentDepth) % 2 == 1) ? WIN_VALUE : LOSS_VALUE;
-            }
-            else if (!HasPossibleMoves())
-            {
-                Debug.Log("LOSER" + (((maxDepth - currentDepth) % 2 == 1) ? "MAX" : "MIN"));
-                return ((maxDepth - currentDepth) % 2 == 1) ? LOSS_VALUE : WIN_VALUE;
-            }
-            else if (currentDepth == maxDepth)
+            if (currentDepth == maxDepth)
             {
                 return evaluationValue;
             }
@@ -39,18 +25,28 @@ namespace etf.santorini.km150096d.moves
 
             List<AIMove> moves = GetAllPossibleMoves();
 
+            if (moves.Count == 0) // nema poteza
+            {
+                bestScore = ((maxDepth - currentDepth) % 2 == 1) ? LOSS_VALUE * (maxDepth - currentDepth + 1) : WIN_VALUE * (maxDepth - currentDepth + 1);
+            }
+
             foreach (MediumMove move in moves)
             {
+                //Debug.Log("hard Moves");
                 Vector2[] currentMove = new Vector2[3];
                 currentMove[0] = move.move[0]; // select
                 currentMove[1] = move.move[1]; // move
                 currentMove[2] = move.move[2]; // build
 
-                //Debug.Log("BOARD STATE select(" + currentMove[0].x + "," + currentMove[0].y + ")" + "move(" + currentMove[1].x + "," + currentMove[1].y + ")" + "build(" + currentMove[2].x + "," + currentMove[2].y + ") -- Val:" + move.evaluationValue);
-
-                float currentScore = move.Algorithm(currentMove, currentDepth + 1, player, alpha, beta);
-
-                //Debug.Log("ALGO RESULT select(" + currentMove[0].x + "," + currentMove[0].y + ")" + "move(" + currentMove[1].x + "," + currentMove[1].y + ")" + "build(" + currentMove[2].x + "," + currentMove[2].y + ") -- Val:" + move.evaluationValue);
+                float currentScore;
+                if (move.isWinner) // pobedio je
+                {
+                    currentScore = ((maxDepth - currentDepth) % 2 == 1) ? WIN_VALUE * (maxDepth - currentDepth + 1) : LOSS_VALUE * (maxDepth - currentDepth + 1);
+                }
+                else
+                {
+                    currentScore = move.Algorithm(currentMove, currentDepth + 1, alpha, beta);
+                }
 
                 if (currentDepth == 0 && board is Board && board.Simulation)
                 {
@@ -59,6 +55,7 @@ namespace etf.santorini.km150096d.moves
                        "(" + move.move[1].x + "," + move.move[1].y + ")" +
                        "(" + move.move[2].x + "," + move.move[2].y + ") \t" + currentScore);
                 }
+
                 if ((maxDepth - currentDepth) % 2 == 1) // odd - max 
                 {
                     if (currentScore > bestScore)
@@ -68,7 +65,6 @@ namespace etf.santorini.km150096d.moves
                         bestMove[1] = move.move[1]; // move
                         bestMove[2] = move.move[2]; // build
 
-                        //Debug.Log("MAX: select(" + bestMove[0].x + "," + bestMove[0].y + ")" + "move(" + bestMove[1].x + "," + bestMove[1].y + ")" + "build(" + bestMove[2].x + "," + bestMove[2].y + ") -- Val:" + bestScore);
                         alpha = Mathf.Max(alpha, bestScore);
                         if (bestScore >= beta)
                         {
@@ -77,7 +73,7 @@ namespace etf.santorini.km150096d.moves
                         }
                     }
                 }
-                else
+                else // min
                 {
                     if (currentScore < bestScore)
                     {
@@ -86,11 +82,10 @@ namespace etf.santorini.km150096d.moves
                         bestMove[1] = move.move[1]; // move
                         bestMove[2] = move.move[2]; // build
 
-                        //Debug.Log("MIN: select(" + bestMove[0].x + "," + bestMove[0].y + ")" + "move(" + bestMove[1].x + "," + bestMove[1].y + ")" + "build(" + bestMove[2].x + "," + bestMove[2].y + ") -- Val:" + bestScore);
                         beta = Mathf.Min(beta, bestScore);
                         if (bestScore <= alpha)
                         {
-                               //Debug.Log("ODSECANJE alpha=" + alpha + "beta=" + beta + "current" + currentScore);
+                            //Debug.Log("ODSECANJE alpha=" + alpha + "beta=" + beta + "current" + currentScore);
                             return bestScore;
                         }
                     }
